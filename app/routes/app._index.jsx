@@ -1,328 +1,208 @@
-import { useEffect } from "react";
-import { useFetcher } from "@remix-run/react";
+
+import { json } from "@remix-run/node";
+
 import {
   Page,
-  Layout,
   Text,
   Card,
   Button,
   BlockStack,
-  Box,
-  List,
-  Link,
-  InlineStack,
+  MediaCard,
+  TextContainer,Banner
 } from "@shopify/polaris";
-import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
+
 import { authenticate } from "../shopify.server";
+import { useNavigate } from "@remix-run/react";
+import ProductTable  from "../componets/ProductTable";
+import ProductForm from "../componets/ProductForm";
+import EmptyProductState from "../componets/EmptyProductState";
+import SkeletonLoad from "../componets/SkeletonLoad";
+import { useAppData } from "../hooks/useAppData";
+import { shopInstance } from "../services/api/ShopService";
+import { productInstance } from "../services/api/ProductService";
+
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  const {session }=await authenticate.admin(request);
+  const shop_domain=session.shop
+  let shop;
+  let retries = 3;
+  let delay = 2000;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+     shop = await shopInstance.getShopDetails(shop_domain);
+    if (shop && shop.shop_id) break; // Exit loop if shop ID exists
+    console.log(`Retrying shop fetch: Attempt ${attempt}`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
 
-  return null;
+  if (!shop || !shop.shop_id) {
+    throw new Error("Shop data not found in FastAPI after retries");
+  }
+  const reorderDetails = await productInstance.getAllProductDetails(shop.shop_id);
+
+  return json({ reorderDetails: reorderDetails,shopID:shop.shop_id }); 
+ 
 };
 
 export const action = async ({ request }) => {
-  const { admin } = await authenticate.admin(request);
-  const color = ["Red", "Orange", "Yellow", "Green"][
-    Math.floor(Math.random() * 4)
-  ];
-  const response = await admin.graphql(
-    `#graphql
-      mutation populateProduct($product: ProductCreateInput!) {
-        productCreate(product: $product) {
-          product {
-            id
-            title
-            handle
-            status
-            variants(first: 10) {
-              edges {
-                node {
-                  id
-                  price
-                  barcode
-                  createdAt
-                }
-              }
-            }
-          }
-        }
-      }`,
-    {
-      variables: {
-        product: {
-          title: `${color} Snowboard`,
-        },
-      },
-    },
-  );
-  const responseJson = await response.json();
-  const product = responseJson.data.productCreate.product;
-  const variantId = product.variants.edges[0].node.id;
-  const variantResponse = await admin.graphql(
-    `#graphql
-    mutation shopifyRemixTemplateUpdateVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-        productVariants {
-          id
-          price
-          barcode
-          createdAt
-        }
-      }
-    }`,
-    {
-      variables: {
-        productId: product.id,
-        variants: [{ id: variantId, price: "100.00" }],
-      },
-    },
-  );
-  const variantResponseJson = await variantResponse.json();
 
-  return {
-    product: responseJson.data.productCreate.product,
-    variant: variantResponseJson.data.productVariantsBulkUpdate.productVariants,
-  };
+  const formData = await request.formData();
+  const method = request.method;
+  let response;
+  console.log(formData)
+  try{
+    if (method === "PATCH") {
+      response = await productInstance.updateProductData(formData);
+      return {success:"",result:response};
+    } else {
+      response = await productInstance.saveProductData(formData);
+      return {success:"Estimated Usage Days saved successfully!",result:response};
+    }
+    
+
+    
+  }catch (error) {
+    console.error("Error:", error);
+    return { error: "Failed to save Estimated Usage Days. Please check your input and try again. If the issue persists, contact support for assistance" };
+  }
+
+ 
 };
 
-export default function Index() {
-  const fetcher = useFetcher();
-  const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
 
-  useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
-    }
-  }, [productId, shopify]);
-  const generateProduct = () => fetcher.submit({}, { method: "POST" });
+export default function Index() {
+  const {fetcher,shopID,
+    formState,
+    setformState,
+    formProductState,
+    setFormProductState,
+    loading,
+    spinner,
+    updatedProducts,
+    editingProduct,
+    bannerMessage,
+    bannerStatus,
+    setBannerMessage,
+    selectProduct,
+    handleReorderChange,
+    editReorderDay,
+    saveReorderDay,
+    resetReorderfield,
+    onCancel,
+    confirmReset,
+    activeModal,
+    toggleModal,
+    selectedProductId,
+    selectedVariantId,
+    handleChange,plan}=useAppData();
+    const { data, state } = fetcher;
+    const navigate =useNavigate();
+  if (loading) {
+    <SkeletonLoad/>
+  }
 
   return (
     <Page>
-      <TitleBar title="Remix app template">
-        <button variant="primary" onClick={generateProduct}>
-          Generate a product
-        </button>
-      </TitleBar>
-      <BlockStack gap="500">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
-                    <Link
-                      url="https://shopify.dev/docs/apps/tools/app-bridge"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    interface examples like an{" "}
-                    <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
-                    </Link>
-                    , as well as an{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      Admin GraphQL
-                    </Link>{" "}
-                    mutation demo, to provide a starting point for app
-                    development.
-                  </Text>
-                </BlockStack>
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingMd">
-                    Get started with products
-                  </Text>
-                  <Text as="p" variant="bodyMd">
-                    Generate a product with GraphQL and get the JSON output for
-                    that product. Learn more about the{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      productCreate
-                    </Link>{" "}
-                    mutation in our API references.
-                  </Text>
-                </BlockStack>
-                <InlineStack gap="300">
-                  <Button loading={isLoading} onClick={generateProduct}>
-                    Generate a product
-                  </Button>
-                  {fetcher.data?.product && (
-                    <Button
-                      url={`shopify:admin/products/${productId}`}
-                      target="_blank"
-                      variant="plain"
-                    >
-                      View product
-                    </Button>
-                  )}
-                </InlineStack>
-                {fetcher.data?.product && (
-                  <>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productCreate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.product, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productVariantsBulkUpdate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.variant, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                  </>
+      
+      <Card roundedAbove="sm" padding="400">
+        <div style={{padding:'1rem 3rem',justifyContent:'center'}}>
+          <MediaCard
+            title={<Text
+              variant="headingLg"
+              as="span"
+              tone="subdued"
+              fontWeight="regular"
+              alignment="center"
+              padding="400"
+            >
+              Intelligent, Automated Reorder Reminders for Repeat Sales Growth!
+            </Text>}  
+          >
+            <img
+              alt=""
+              width="100%"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center',
+                marginLeft:'0.5rem',
+              }}
+              src="../logo.png?width=1850"
+            />
+          </MediaCard>
+        </div>
+        
+        <BlockStack gap="400" >
+          <div style={{paddingLeft:'5rem',paddingRight:'5rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
+            <ProductForm bannerMessage={bannerMessage}
+            bannerStatus={bannerStatus}
+            setBannerMessage={setBannerMessage}
+            handleChange={handleChange}
+            formState={formState}
+            formProductState={formProductState}
+            selectProduct={selectProduct} 
+            plan={plan} 
+            updatedProducts={updatedProducts}
+            fetcher={fetcher}
+            shopID={shopID}/>
+            {state === "submitting" && <p>Submitting...</p>}
+            {data?.error && <p style={{ color: "red" }}>Error: {data.error}</p>}
+            {data?.success && <p style={{ color: "darkgreen" }}>{data.success}</p>}
+          </div>
+            <Text variant="headingLg" as="h5" fontWeight="medium" alignment="center">
+            Here, you'll find a list of all products with Estimated Usage Days set up.
+            </Text>
+            <Text variant="headingMd" as="h6" tone="subdued" fontWeight="regular" alignment="center">
+            These products are ready to send automated reorder reminders to your customers based on their typical usage.
+            </Text>
+            <div style={{ marginLeft:'5rem',marginRight:'5rem'}}>
+              <Card padding="0" >
+              {updatedProducts.length === 0 ? (
+                <EmptyProductState />
+              ) : (
+                
+                <ProductTable productData={updatedProducts} 
+                            spinner={spinner} 
+                            editingProduct={editingProduct} 
+                            editReorderDay={editReorderDay} 
+                            resetReorderfield={resetReorderfield} 
+                            saveReorderDay={saveReorderDay} 
+                            cancelReorderDays={onCancel}
+                            handleReorderChange={handleReorderChange} 
+                            activeModal={activeModal} 
+                            toggleModal={toggleModal}
+                            confirmReset={confirmReset}
+                            selected_productId={selectedProductId}
+                            selected_variantId={selectedVariantId}/>
+              )}
+              {plan === "FREE" && updatedProducts.length >= 5 && (
+                  <TextContainer>
+                    <Banner  tone="info">
+                      <p>
+                      You’ve reached the maximum number of products allowed for your current plan.
+                      <Button variant="plain" onClick={() => {
+                      navigate("/app/settings?tab=2");}} >Upgrade Now</Button>  to add more.
+                      </p>
+                    </Banner>
+                  </TextContainer>
                 )}
-              </BlockStack>
+              </Card>
+            </div>
+            
+            <Card background="bg-surface-warning-active" style={{ marginTop:'0.5rem'}}>
+              <Text variant="headingMd" as="h6" alignment="center">
+              How We Calculate Reminder Timing:
+              </Text>
+              <Text variant="headingSm" tone="subdued" as="h6" alignment="center">
+                We calculate the reminder date based on the following formula:
+              </Text>
+              <Text variant="headingSm" as="h6" alignment="center">
+              Order Date + (Ordered Quantity * Estimated Usage Days of the Product) - Buffer Time
+              </Text>
             </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneThird">
-            <BlockStack gap="500">
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    App template specs
-                  </Text>
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Framework
-                      </Text>
-                      <Link
-                        url="https://remix.run"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Remix
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Database
-                      </Text>
-                      <Link
-                        url="https://www.prisma.io/"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Prisma
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Interface
-                      </Text>
-                      <span>
-                        <Link
-                          url="https://polaris.shopify.com"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          Polaris
-                        </Link>
-                        {", "}
-                        <Link
-                          url="https://shopify.dev/docs/apps/tools/app-bridge"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          App Bridge
-                        </Link>
-                      </span>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        API
-                      </Text>
-                      <Link
-                        url="https://shopify.dev/docs/api/admin-graphql"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphQL API
-                      </Link>
-                    </InlineStack>
-                  </BlockStack>
-                </BlockStack>
-              </Card>
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Next steps
-                  </Text>
-                  <List>
-                    <List.Item>
-                      Build an{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/getting-started/build-app-example"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        {" "}
-                        example app
-                      </Link>{" "}
-                      to get started
-                    </List.Item>
-                    <List.Item>
-                      Explore Shopify’s API with{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/tools/graphiql-admin-api"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphiQL
-                      </Link>
-                    </List.Item>
-                  </List>
-                </BlockStack>
-              </Card>
-            </BlockStack>
-          </Layout.Section>
-        </Layout>
-      </BlockStack>
+            
+
+        </BlockStack>
+      </Card>
     </Page>
   );
-}
+};
