@@ -1,0 +1,45 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "259394455f7a33201dc1bd697d41a237"
+name = "ReorderReminder_stg"
+handle = "reorderreminder_stg"
+application_url = "https://speech-effective-gr-orders.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "deca-development-store.myshopify.com"
+include_config_on_deploy = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,read_fulfillments,read_orders,read_products"
+
+[auth]
+redirect_urls = [
+  "https://speech-effective-gr-orders.trycloudflare.com/auth/callback",
+  "https://speech-effective-gr-orders.trycloudflare.com/auth/shopify/callback",
+  "https://speech-effective-gr-orders.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-10"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+  
+  [[webhooks.subscriptions]]
+  topics = [ "checkouts/create", "orders/fulfilled" ]
+  uri = "/webhooks/order"
+
+  [[webhooks.subscriptions]]
+  topics = [ "products/delete" ]
+  uri = "/webhooks/productDelete"
+
+[pos]
+embedded = false
