@@ -43,8 +43,8 @@ const ProductTable = ({ }) => {
                     activeModal={activeModal}
                     toggleModal={toggleModal}
                     confirmReset={confirmReset}
-                    selectedProductId={product.shopify_product_id}
-                    selectedVariantId={product.shopify_variant_id}
+                    selectedProductId={selectedProductId}
+                    selectedVariantId={selectedVariantId}
                     />
                 ))}
                 </IndexTable>
