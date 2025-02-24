@@ -2,7 +2,7 @@
 import { Card, FormLayout, TextField, Tooltip, Icon, Button,Layout,BlockStack ,Text,Box,Bleed} from "@shopify/polaris";
 import {useEmailSettings} from "../../hooks/useEmailSettings";
 import {useGeneralSettings} from "../../hooks/useGeneralSettings";
-import { InfoIcon } from "@shopify/polaris-icons";
+import { InfoIcon,AlertTriangleIcon } from "@shopify/polaris-icons";
 import ReorderEmailPreview from "../settings/ReorderEmailPreview";
 import { useState } from "react";
 
