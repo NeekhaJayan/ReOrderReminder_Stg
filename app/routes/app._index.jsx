@@ -71,8 +71,7 @@ export const action = async ({ request }) => {
 
 
 export default function Index() {
-  const {fetcher,loading,updatedProducts,plan}=useAppData();
-    const { data, state } = fetcher;
+  const {data,state,loading,updatedProducts,plan}=useAppData();
     const navigate =useNavigate();
   if (loading) {
     <SkeletonLoad/>

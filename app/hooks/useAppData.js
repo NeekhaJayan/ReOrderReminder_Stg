@@ -270,7 +270,7 @@ export function useAppData() {
         toggleModal,
         selectedProductId,
         selectedVariantId,
-        handleChange,plan
+        handleChange,plan,data,state
       };
 };
 
