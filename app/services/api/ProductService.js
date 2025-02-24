@@ -96,7 +96,7 @@ class Product{
             const result = await response.json();
             console.log("Response from API:", result);
     
-            return await response.json();
+            return result;
     
         } catch (error) {
             console.error("Error in updateProductData:", error.message);
