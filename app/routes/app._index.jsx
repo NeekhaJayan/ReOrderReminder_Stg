@@ -127,7 +127,7 @@ export default function Index() {
                 <EmptyProductState />
               ) : (
                 
-                <ProductTable />
+                <ProductTable productData={updatedProducts} />
               )}
               {plan === "FREE" && updatedProducts.length >= 5 && (
                   <TextContainer>

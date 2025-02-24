@@ -1,8 +1,8 @@
 import {IndexTable,Spinner,Text} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
 import { useAppData } from "../hooks/useAppData";
-const ProductTable = ({ }) => {
-    const {updatedProducts,spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,onCancel,handleReorderChange,activeModal,toggleModal,confirmReset,selectedProductId,selectedVariantId}=useAppData();
+const ProductTable = ({ productData }) => {
+    const {spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,onCancel,handleReorderChange,activeModal,toggleModal,confirmReset,selectedProductId,selectedVariantId}=useAppData();
     return(
         <>
             <IndexTable
@@ -10,7 +10,7 @@ const ProductTable = ({ }) => {
                     singular: "Product",
                     plural: "Products",
                 }}
-                itemCount={updatedProducts.length}
+                itemCount={productData.length}
                 headings={[
                     { title: "Product Name" },
                     { title: "Estimated Usage Days" },
@@ -30,7 +30,7 @@ const ProductTable = ({ }) => {
                 ]}
                 selectable={false}
                 >
-                {updatedProducts.map((product) => (
+                {productData.map((product) => (
                     <ProductTableRow
                     key={product.shopify_variant_id}
                     product={product}
