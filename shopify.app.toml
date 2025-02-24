@@ -3,7 +3,7 @@
 client_id = "259394455f7a33201dc1bd697d41a237"
 name = "ReorderReminder_stg"
 handle = "reorderreminder_stg"
-application_url = "https://speech-effective-gr-orders.trycloudflare.com"
+application_url = "https://reorderreminder-staging.onrender.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_customers,read_fulfillments,read_orders,read_products"
 
 [auth]
 redirect_urls = [
-  "https://speech-effective-gr-orders.trycloudflare.com/auth/callback",
-  "https://speech-effective-gr-orders.trycloudflare.com/auth/shopify/callback",
-  "https://speech-effective-gr-orders.trycloudflare.com/api/auth/callback"
+  "https://reorderreminder-staging.onrender.com/auth/callback",
+  "https://reorderreminder-staging.onrender.com/auth/shopify/callback",
+  "https://reorderreminder-staging.onrender.com/api/auth/callback"
 ]
 
 [webhooks]
@@ -32,14 +32,15 @@ api_version = "2024-10"
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
   uri = "/webhooks/app/uninstalled"
-  
+
   [[webhooks.subscriptions]]
   topics = [ "checkouts/create", "orders/fulfilled" ]
   uri = "/webhooks/order"
 
   [[webhooks.subscriptions]]
-  topics = [ "products/delete" ]
-  uri = "/webhooks/productDelete"
+  topics = [ "products/delete", "products/update"]
+  uri = "/webhooks/product_delete_update"
+
 
 [pos]
 embedded = false
