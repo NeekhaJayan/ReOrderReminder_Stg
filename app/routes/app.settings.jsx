@@ -58,7 +58,7 @@ export const action = async ({ request }) => {
 
 export default function SettingsPage() {
   const { shop_domain} = useLoaderData();
-  const {selectedTab,tabKey,tabs,handleTabChange,fetcher}=useSettings();
+  const {selectedTab,tabKey,tabs,handleTabChange,loading,fetcher}=useSettings();
   const { plan } = useOutletContext();
   
   if (loading) {
