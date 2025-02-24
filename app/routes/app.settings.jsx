@@ -87,8 +87,7 @@ export default function SettingsPage() {
             {selectedTab === 1 && (
               <EmailSettingsTab  shop_domain={shop_domain} 
               plan={plan} 
-              fetcher={fetcher} 
-              imageUrlForPreview={imageUrlForPreview} />
+              fetcher={fetcher} />
             )}
             {selectedTab === 2 && (
               <PricingPlans plan={plan} />
