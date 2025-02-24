@@ -52,8 +52,8 @@ class Product{
         if (!response.ok) {
             throw new Error("Failed to save Estimated Usage Days. Please check your input and try again. If the issue persists, contact support for assistance");
         }
-  
-        return await response.json();
+        const result = await response.json();
+        return result;
     }
 
     async updateProductData(formData) {

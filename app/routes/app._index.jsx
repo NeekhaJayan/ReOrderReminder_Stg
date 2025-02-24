@@ -53,9 +53,11 @@ export const action = async ({ request }) => {
   try{
     if (method === "PATCH") {
       response = await productInstance.updateProductData(formData);
+      console.log(response)
       return {success:"",result:response};
     } else {
       response = await productInstance.saveProductData(formData);
+
       return {success:"Estimated Usage Days saved successfully!",result:response};
     }
     
