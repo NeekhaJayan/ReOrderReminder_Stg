@@ -6,8 +6,6 @@ import PricingPlans from "../componets/settings/PricingPlans";
 import { useOutletContext } from '@remix-run/react';
 import {getShopDetails} from '../utils/shopify';
 import SkeletonLoad from "../componets/SkeletonLoad";
-import {useEmailSettings} from "../hooks/useEmailSettings";
-import {useGeneralSettings} from "../hooks/useGeneralSettings";
 import {useSettings} from "../hooks/useSettings";
 import EmailSettingsTab from "../componets/settings/EmailSettingsTab";
 import GeneralSettingsTab from "../componets/settings/GeneralSettingsTab";
@@ -60,8 +58,6 @@ export const action = async ({ request }) => {
 
 export default function SettingsPage() {
   const { shop_domain} = useLoaderData();
-  const { files,progress,bannerMessage,bannerStatus,isSyncDisabled,loading,imageUrlForPreview, setBannerMessage, handleSync ,handleSubmit,handleDrop,handleRemoveImage } = useGeneralSettings();
-  const { subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } = useEmailSettings();
   const {selectedTab,tabKey,tabs,handleTabChange,fetcher}=useSettings();
   const { plan } = useOutletContext();
   
@@ -86,36 +82,13 @@ export default function SettingsPage() {
         <Tabs key={tabKey} tabs={tabs} selected={selectedTab} onSelect={handleTabChange} fitted>
           <div style={{ padding: "16px" }}>
             {selectedTab === 0 && (
-             <GeneralSettingsTab 
-                         shop_domain={shop_domain} 
-                         fetcher={fetcher}  
-                         files={files} progress={progress} 
-                         bannerMessage={bannerMessage}
-                         isSyncDisabled={isSyncDisabled} 
-                         loading={loading}
-                         setBannerMessage={setBannerMessage}
-                          handleSync={handleSync} 
-                          handleSubmit={handleSubmit}
-                          handleDrop={handleDrop}
-                          handleRemoveImage={handleRemoveImage}/>
+             <GeneralSettingsTab shop_domain={shop_domain} fetcher={fetcher}  />
             )}
             {selectedTab === 1 && (
               <EmailSettingsTab  shop_domain={shop_domain} 
               plan={plan} 
               fetcher={fetcher} 
-              imageUrlForPreview={imageUrlForPreview}
-              subject={subject}
-              setSubject={setSubject}
-              fromName={fromName} 
-              setFromName={setFromName} 
-              fromEmail={fromEmail} 
-              setFromEmail={setFromEmail}
-               coupon={coupon}
-                setCoupon={setCoupon}
-                discountPercent={discountPercent}
-                setDiscountPercent={setDiscountPercent}
-                bufferTime={bufferTime} 
-                setBufferTime={setBufferTime} />
+              imageUrlForPreview={imageUrlForPreview} />
             )}
             {selectedTab === 2 && (
               <PricingPlans plan={plan} />

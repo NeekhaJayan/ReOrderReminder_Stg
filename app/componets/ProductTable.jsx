@@ -1,8 +1,8 @@
 import {IndexTable,Spinner,Text} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
-
-const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId}) => {
-
+import { useAppData } from "../hooks/useAppData";
+const ProductTable = ({ }) => {
+    const {updatedProducts,spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,onCancel,handleReorderChange,activeModal,toggleModal,confirmReset,selectedProductId,selectedVariantId}=useAppData();
     return(
         <>
             <IndexTable
@@ -10,7 +10,7 @@ const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetR
                     singular: "Product",
                     plural: "Products",
                 }}
-                itemCount={productData.length}
+                itemCount={updatedProducts.length}
                 headings={[
                     { title: "Product Name" },
                     { title: "Estimated Usage Days" },
@@ -30,7 +30,7 @@ const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetR
                 ]}
                 selectable={false}
                 >
-                {productData.map((product) => (
+                {updatedProducts.map((product) => (
                     <ProductTableRow
                     key={product.shopify_variant_id}
                     product={product}
@@ -38,7 +38,7 @@ const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetR
                     onEdit={() => editReorderDay(product.shopify_variant_id)}
                     onReset={resetReorderfield}
                     onSave={() => saveReorderDay(product)}
-                    onCancel={()=>cancelReorderDays(product.shopify_variant_id)}
+                    onCancel={()=>onCancel(product.shopify_variant_id)}
                     onReorderChange={handleReorderChange}
                     activeModal={activeModal}
                     toggleModal={toggleModal}

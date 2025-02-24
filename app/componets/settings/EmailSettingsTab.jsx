@@ -1,12 +1,16 @@
 
 import { Card, FormLayout, TextField, Tooltip, Icon, Button,Layout,BlockStack ,Text,Box,Bleed} from "@shopify/polaris";
+import {useEmailSettings} from "../../hooks/useEmailSettings";
+import {useGeneralSettings} from "../../hooks/useGeneralSettings";
 import { InfoIcon } from "@shopify/polaris-icons";
 import ReorderEmailPreview from "../settings/ReorderEmailPreview";
 import { useState } from "react";
 
-const EmailSettingsTab = ({shop_domain,plan,fetcher,imageUrlForPreview,subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } ) => {
+const EmailSettingsTab = ({shop_domain,plan,fetcher} ) => {
     const { data, state } = fetcher;
     const [loading, setLoading] = useState(true);
+    const { subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } = useEmailSettings();
+    const {imageUrlForPreview}=useGeneralSettings();
     return (
         <>
             <Layout>

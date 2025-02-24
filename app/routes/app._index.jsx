@@ -71,30 +71,7 @@ export const action = async ({ request }) => {
 
 
 export default function Index() {
-  const {fetcher,shopID,
-    formState,
-    setformState,
-    formProductState,
-    setFormProductState,
-    loading,
-    spinner,
-    updatedProducts,
-    editingProduct,
-    bannerMessage,
-    bannerStatus,
-    setBannerMessage,
-    selectProduct,
-    handleReorderChange,
-    editReorderDay,
-    saveReorderDay,
-    resetReorderfield,
-    onCancel,
-    confirmReset,
-    activeModal,
-    toggleModal,
-    selectedProductId,
-    selectedVariantId,
-    handleChange,plan}=useAppData();
+  const {fetcher,loading,updatedProducts,plan}=useAppData();
     const { data, state } = fetcher;
     const navigate =useNavigate();
   if (loading) {
@@ -133,17 +110,7 @@ export default function Index() {
         
         <BlockStack gap="400" >
           <div style={{paddingLeft:'5rem',paddingRight:'5rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
-            <ProductForm bannerMessage={bannerMessage}
-            bannerStatus={bannerStatus}
-            setBannerMessage={setBannerMessage}
-            handleChange={handleChange}
-            formState={formState}
-            formProductState={formProductState}
-            selectProduct={selectProduct} 
-            plan={plan} 
-            updatedProducts={updatedProducts}
-            fetcher={fetcher}
-            shopID={shopID}/>
+            <ProductForm/>
             {state === "submitting" && <p>Submitting...</p>}
             {data?.error && <p style={{ color: "red" }}>Error: {data.error}</p>}
             {data?.success && <p style={{ color: "darkgreen" }}>{data.success}</p>}
@@ -160,19 +127,7 @@ export default function Index() {
                 <EmptyProductState />
               ) : (
                 
-                <ProductTable productData={updatedProducts} 
-                            spinner={spinner} 
-                            editingProduct={editingProduct} 
-                            editReorderDay={editReorderDay} 
-                            resetReorderfield={resetReorderfield} 
-                            saveReorderDay={saveReorderDay} 
-                            cancelReorderDays={onCancel}
-                            handleReorderChange={handleReorderChange} 
-                            activeModal={activeModal} 
-                            toggleModal={toggleModal}
-                            confirmReset={confirmReset}
-                            selected_productId={selectedProductId}
-                            selected_variantId={selectedVariantId}/>
+                <ProductTable />
               )}
               {plan === "FREE" && updatedProducts.length >= 5 && (
                   <TextContainer>
