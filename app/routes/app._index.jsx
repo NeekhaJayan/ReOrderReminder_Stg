@@ -71,7 +71,8 @@ export const action = async ({ request }) => {
 
 
 export default function Index() {
-  const {data,state,loading,updatedProducts,plan}=useAppData();
+  const {fetcher,loading,updatedProducts,plan}=useAppData();
+  const { data, state } = fetcher;
     const navigate =useNavigate();
   if (loading) {
     <SkeletonLoad/>
@@ -109,7 +110,7 @@ export default function Index() {
         
         <BlockStack gap="400" >
           <div style={{paddingLeft:'5rem',paddingRight:'5rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
-            <ProductForm/>
+            <ProductForm fetcher={fetcher}/>
             {state === "submitting" && <p>Submitting...</p>}
             {data?.error && <p style={{ color: "red" }}>Error: {data.error}</p>}
             {data?.success && <p style={{ color: "darkgreen" }}>{data.success}</p>}

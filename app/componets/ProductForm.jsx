@@ -6,10 +6,10 @@ import { useAppData } from "../hooks/useAppData";
 
 
 
-const ProductForm = ( ) => {
+const ProductForm = ({fetcher} ) => {
     const navigate =useNavigate();
     const [errors, setErrors] = useState({});
-    const { bannerMessage,bannerStatus,setBannerMessage,handleChange,formState,formProductState,selectProduct,plan,updatedProducts,fetcher,shopID}=useAppData();
+    const { bannerMessage,bannerStatus,setBannerMessage,handleChange,formState,formProductState,selectProduct,plan,updatedProducts,shopID}=useAppData();
 
     return (
     <>
