@@ -2,14 +2,12 @@ import {BlockStack, Banner, Card, InlineStack, Thumbnail, Text, Button,InlineErr
 import { useNavigate } from "@remix-run/react";
 import { useState} from "react";
 import { ImageIcon } from "@shopify/polaris-icons";
-import { useAppData } from "../hooks/useAppData";
 
 
 
-const ProductForm = ({fetcher} ) => {
+const ProductForm = ({ bannerMessage,bannerStatus,setBannerMessage,handleChange,formState,formProductState,selectProduct,plan,updatedProducts,fetcher,shopID} ) => {
     const navigate =useNavigate();
     const [errors, setErrors] = useState({});
-    const { bannerMessage,bannerStatus,setBannerMessage,handleChange,formState,formProductState,selectProduct,plan,updatedProducts,shopID}=useAppData();
 
     return (
     <>

@@ -48,21 +48,16 @@ export const action = async ({ request }) => {
 
   const formData = await request.formData();
   const method = request.method;
-  let response;
-  console.log(formData)
+  let result;
   try{
     if (method === "PATCH") {
-      response = await productInstance.updateProductData(formData);
-      console.log(response)
-      return {success:"",result:response};
+      result = await productInstance.updateProductData(formData);
+      console.log(result);
+      return {success:"",result:result};
     } else {
-      response = await productInstance.saveProductData(formData);
-
-      return {success:"Estimated Usage Days saved successfully!",result:response};
-    }
-    
-
-    
+      result = await productInstance.saveProductData(formData);
+      return {success:"Estimated Usage Days saved successfully!",result:result};
+    } 
   }catch (error) {
     console.error("Error:", error);
     return { error: "Failed to save Estimated Usage Days. Please check your input and try again. If the issue persists, contact support for assistance" };
@@ -73,8 +68,32 @@ export const action = async ({ request }) => {
 
 
 export default function Index() {
-  const {fetcher,loading,updatedProducts,plan}=useAppData();
-  const { data, state } = fetcher;
+  const {fetcher,shopID,
+    formState,
+    setformState,
+    formProductState,
+    setFormProductState,
+    loading,
+    spinner,
+    updatedProducts,
+    editingProduct,
+    bannerMessage,
+    bannerStatus,
+    setBannerMessage,
+    selectProduct,
+    handleReorderChange,
+    editReorderDay,
+    saveReorderDay,
+    resetReorderfield,
+    onCancel,
+    confirmReset,
+    activeModal,
+    toggleModal,
+    selectedProductId,
+    selectedVariantId,
+    handleChange,plan}=useAppData();
+    const { data, state } = fetcher;
+    console.log(data);
     const navigate =useNavigate();
   if (loading) {
     <SkeletonLoad/>
@@ -112,7 +131,17 @@ export default function Index() {
         
         <BlockStack gap="400" >
           <div style={{paddingLeft:'5rem',paddingRight:'5rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
-            <ProductForm fetcher={fetcher}/>
+            <ProductForm bannerMessage={bannerMessage}
+            bannerStatus={bannerStatus}
+            setBannerMessage={setBannerMessage}
+            handleChange={handleChange}
+            formState={formState}
+            formProductState={formProductState}
+            selectProduct={selectProduct} 
+            plan={plan} 
+            updatedProducts={updatedProducts}
+            fetcher={fetcher}
+            shopID={shopID}/>
             {state === "submitting" && <p>Submitting...</p>}
             {data?.error && <p style={{ color: "red" }}>Error: {data.error}</p>}
             {data?.success && <p style={{ color: "darkgreen" }}>{data.success}</p>}
@@ -129,7 +158,19 @@ export default function Index() {
                 <EmptyProductState />
               ) : (
                 
-                <ProductTable productData={updatedProducts} />
+                <ProductTable productData={updatedProducts} 
+                            spinner={spinner} 
+                            editingProduct={editingProduct} 
+                            editReorderDay={editReorderDay} 
+                            resetReorderfield={resetReorderfield} 
+                            saveReorderDay={saveReorderDay} 
+                            cancelReorderDays={onCancel}
+                            handleReorderChange={handleReorderChange} 
+                            activeModal={activeModal} 
+                            toggleModal={toggleModal}
+                            confirmReset={confirmReset}
+                            selected_productId={selectedProductId}
+                            selected_variantId={selectedVariantId}/>
               )}
               {plan === "FREE" && updatedProducts.length >= 5 && (
                   <TextContainer>

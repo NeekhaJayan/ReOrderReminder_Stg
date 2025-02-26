@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useFetcher,useLoaderData } from "@remix-run/react";
 import { useOutletContext } from '@remix-run/react';
+import {settingsInstance} from "../services/api/SettingService";
 
 export  function useGeneralSettings() {
   const { shop_domain, settingDetails } = useLoaderData();
@@ -84,25 +85,14 @@ export  function useGeneralSettings() {
     const handleSubmit = async (event) => {
       event.preventDefault(); 
       setLoading(true);
-    
       const formData = new FormData();
       console.log(formData)
       formData.append("bannerImage", files[0]); // Ensure files is an array
-      formData.append("shop_name", shop_domain);
+      
     
       try {
-        const response = await fetch(`http://127.0.0.1:8000/auth/upload_to_aws/${shop_domain}`, {
-          method: "POST", 
-          body: formData, 
-        });
-    
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to upload image. ${errorText}`);
-        }
-    
-        const result = await response.json();
-        console.log("Upload success:", result);
+        const AWS_Upload_func =await settingsInstance.uploadImage(shop_domain,formData);
+        console.log("Upload success:", AWS_Upload_func);
         setLoading(false);
       } catch (error) {
         console.error("Upload failed:", error);
@@ -111,7 +101,7 @@ export  function useGeneralSettings() {
     };
   
 
-  return { files,progress,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage, loading, handleSync ,handleSubmit,handleDrop,handleRemoveImage};
+  return { files,progress,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage, loading,fetcher, handleSync ,handleSubmit,handleDrop,handleRemoveImage};
 };
 
 

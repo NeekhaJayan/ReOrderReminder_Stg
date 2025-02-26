@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback,useLayoutEffect } from "react";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { useOutletContext } from '@remix-run/react';
 
@@ -139,35 +139,36 @@ export function useAppData() {
         setEditingProduct(productId); // Only the selected product should be editable
     }, []);
     // Submit updated reorder interval to the API
-    const resetReorderfield = useCallback((productid,variantid) => {
-        // Update the state to set reorder_days to null
-
-        setUpdatedProducts((prev) =>
-        prev.filter((product) => product.shopify_variant_id !== variantid)
+    const resetReorderfield = useCallback((productId, variantId) => {
+        const updatedProduct = updatedProducts.find(
+          (p) => p.shopify_variant_id === variantId
         );
-        // Submit the reset value to the backend
-        fetcher.submit(
-        {
-            shopId:shopID,
-            productId: productid,
-            variantId:variantid,
-            reorder_days: null,
-        },
-        { method: "patch" }
-        );
-        console.log({
-        shopId:shopID,
-        productId: productid,
-        variantId:variantid,
-        reorder_days: null,
-        })
-        // Clear editing and reset state
+    
+        if (updatedProduct) {
+          setSpinner(true);
+          fetcher.submit(
+            {
+              shopId: shopID,
+              productId: updatedProduct.shopify_product_id,
+              variantId: updatedProduct.shopify_variant_id,
+              reorder_days: null, // Reset reorder_days to null
+            },
+            { method: "patch" }
+          );
+    
+          // Optimistically update state
+          setUpdatedProducts((prev) =>
+            prev.filter((product) => product.shopify_variant_id !== variantId)
+          );
+        }
+    
         setEditingProduct(null);
-        // setResetProduct(null);
         setSelectedProductId(null);
         setSelectedVarientId(null);
         setActiveModal(false);
-    }, [fetcher]);
+    }, [fetcher, updatedProducts]);
+    
+    
   
     const onCancel = (productId) => {
         setUpdatedProducts((prevProducts) =>
@@ -183,9 +184,7 @@ export function useAppData() {
     const saveReorderDay = useCallback(
         (product) => {
         const updatedProduct = updatedProducts.find(
-            (p) => p.shopify_variant_id === product.shopify_variant_id ? { ...updatedProduct }
-            : p
-        );
+            (p) => p.shopify_variant_id === product.shopify_variant_id );
 
         if (updatedProduct) {
             setSpinner(true);
@@ -227,24 +226,47 @@ export function useAppData() {
         setSpinner(false); // Stop loading when fetcher is idle
         }
     }, [fetcher.state]);
-
     useEffect(() => {
+        if (fetcher.state === "submitting" || fetcher.state === "loading") {
+            setSpinner(true); // Start loading spinner
+        } else {
+            setSpinner(false); // Stop spinner when data is ready
+        }
+    }, [fetcher.state]);
+    
+    useLayoutEffect(() => {
+        console.log(data);
         if (data?.result) {
-        const resultArray = Array.isArray(data.result) ? data.result : [data.result]; // Ensure it's an array
-        setUpdatedProducts((prevData) => {
-            return prevData.map((product) => {
-              if (product.shopify_variant_id === resultArray[0]?.shopify_variant_id) {
-                return { ...product, ...resultArray[0] }; // Replace updated product
-              }
-              return product;
+            const resultArray = Array.isArray(data.result) ? data.result : [data.result]; // Ensure it's an array
+            console.log(resultArray);
+    
+            setUpdatedProducts((prevData) => {
+                // Create a new array with updated products
+                const updatedProducts = prevData.map((product) => {
+                    const foundProduct = resultArray.find(
+                        (newProduct) => Number(newProduct.shopify_variant_id) === product.shopify_variant_id
+                    );
+                    return foundProduct ? { ...product, ...foundProduct } : product;
+                });
+                console.log(updatedProducts)
+                // Check for truly new products
+                const existingIds = new Set(prevData.map((p) => Number(p.shopify_variant_id)));
+                const newProducts = resultArray.filter((p) => !existingIds.has(Number(p.shopify_variant_id)));
+                console.log(existingIds)
+                console.log(newProducts)
+                return [...updatedProducts, ...newProducts]; // Merge updated and new products correctly
             });
-          });
-        setFormProductState(initialState);
-        setformState('')
-
+    
+            // Reset form states properly
+            setFormProductState(initialState);
+            setformState('');
         }
     }, [data]);
+    
+    
+    
 
+    
     return {
         fetcher,
         shopID,
@@ -270,7 +292,7 @@ export function useAppData() {
         toggleModal,
         selectedProductId,
         selectedVariantId,
-        handleChange,plan,data,state
+        handleChange,plan
       };
 };
 

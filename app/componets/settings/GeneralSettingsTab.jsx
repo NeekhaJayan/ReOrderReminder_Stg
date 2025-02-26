@@ -13,11 +13,10 @@ import {
     DropZone,
     Banner,LegacyStack
   } from "@shopify/polaris";
-  import {useGeneralSettings} from "../../hooks/useGeneralSettings";
 
 
-const GeneralSettingsTab = ({ shop_domain,fetcher} ) => {
-    const { files,progress,bannerMessage,bannerStatus,isSyncDisabled,loading,setBannerMessage, handleSync ,handleSubmit,handleDrop,handleRemoveImage } = useGeneralSettings();
+const GeneralSettingsTab = ({ shop_domain,fetcher,files,progress,bannerMessage,bannerStatus,isSyncDisabled,loading,setBannerMessage,handleSync,handleSubmit,handleDrop,handleRemoveImage} ) => {
+
     const fileUpload = (<DropZone.FileUpload actionHint="We recommend an image which is 600px wide." />);
     const uploadedFiles =Array.isArray(files) && files.length > 0 ? (
         <LegacyStack vertical>

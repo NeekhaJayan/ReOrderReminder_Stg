@@ -1,5 +1,5 @@
 
-import {SkeletonPage, SkeletonBodyText, SkeletonDisplayText} from "@shopify/polaris";
+import {SkeletonPage, SkeletonBodyText, SkeletonDisplayText,Layout} from "@shopify/polaris";
 
 
 const SkeletonLoad= () => {

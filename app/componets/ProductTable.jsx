@@ -1,10 +1,14 @@
 import {IndexTable,Spinner,Text} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
-import { useAppData } from "../hooks/useAppData";
-const ProductTable = ({ productData }) => {
-    const {spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,onCancel,handleReorderChange,activeModal,toggleModal,confirmReset,selectedProductId,selectedVariantId}=useAppData();
+import SkeletonLoad from "../componets/SkeletonLoad";
+
+const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId}) => {
+
     return(
         <>
+            {spinner ? (
+                <SkeletonLoad /> // Show skeleton loader while data is being processed
+            ): (
             <IndexTable
                 resourceName={{
                     singular: "Product",
@@ -38,16 +42,17 @@ const ProductTable = ({ productData }) => {
                     onEdit={() => editReorderDay(product.shopify_variant_id)}
                     onReset={resetReorderfield}
                     onSave={() => saveReorderDay(product)}
-                    onCancel={()=>onCancel(product.shopify_variant_id)}
+                    onCancel={()=>cancelReorderDays(product.shopify_variant_id)}
                     onReorderChange={handleReorderChange}
                     activeModal={activeModal}
                     toggleModal={toggleModal}
                     confirmReset={confirmReset}
-                    selectedProductId={selectedProductId}
-                    selectedVariantId={selectedVariantId}
+                    selectedProductId={selected_productId}
+                    selectedVariantId={selected_variantId}
                     />
                 ))}
-                </IndexTable>
+            </IndexTable>
+            )}
         </>
   );
 };
