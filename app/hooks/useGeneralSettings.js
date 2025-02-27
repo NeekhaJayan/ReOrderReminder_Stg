@@ -64,7 +64,7 @@ export  function useGeneralSettings() {
     const handleDrop = useCallback((_droppedFiles, acceptedFiles, rejectedFiles) => {
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
-        setFiles((files) => [...files, ...acceptedFiles]); // Store only the latest uploaded file
+        setFiles([file]); // Store only the latest uploaded file
       }
       setRejectedFiles(rejectedFiles);
       setImageChanged(true);
