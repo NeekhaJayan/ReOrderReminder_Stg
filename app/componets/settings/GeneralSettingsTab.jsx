@@ -26,7 +26,6 @@ const GeneralSettingsTab = ({ shop_domain,fetcher,files,progress,bannerMessage,b
                 source={file.url ? file.url : window.URL.createObjectURL(file)}
                 alt={file.name || "Uploaded image"}
               />
-              
                 <Button variant="plain" onClick={handleRemoveImage}>
                   Remove Upload
                 </Button>
