@@ -3,12 +3,14 @@ import { useFetcher, useLoaderData } from "@remix-run/react";
 import { useOutletContext } from '@remix-run/react';
 
 export function useAppData() {
-    const {reorderDetails,shopID}=useLoaderData();
+    const {reorderDetails,shopID,bufferTime}=useLoaderData();
     const { plan } = useOutletContext();
     const fetcher = useFetcher();
     const [formState, setformState] = useState('');
     const [loading, setLoading] = useState(true);
-    const [spinner,setSpinner]=useState(false)
+    const [spinner,setSpinner]=useState(false);
+    const [bannerMessage, setBannerMessage] = useState(""); // Store banner message
+    const [bannerStatus, setBannerStatus] = useState("");
     const initialState = {
         productId: "",
         productVariantIds: "",
@@ -23,15 +25,24 @@ export function useAppData() {
     const [editingProduct, setEditingProduct] = useState(null); // Track the product being edited
     const [resetProduct,setResetProduct]=useState(null);
     const [updatedProducts, setUpdatedProducts] = useState(reorderDetails);
-    const handleChange = (value)=>setformState({...formState,date:value})
+    const handleChange = (value)=>{
+        if (!value){
+            setBannerMessage("Should Enter Estimated Usage Days!!!");
+            setBannerStatus("critical");
+            return
+        }
+        if(value<bufferTime){
+            setBannerMessage("Estimated Usage Days should be greater than BufferTime!!!");
+            setBannerStatus("critical");
+            return}
+        setformState({...formState,date:value})}
     const [selectedProductIds, setSelectedProductIds] = useState(
         reorderDetails.map(product => ({
         productId: product.shopify_product_id,
         variantIds: [product.shopify_variant_id],  // Assuming selected_variant_id is available in reorderDetails
         }))
     );  // Track selected products
-    const [bannerMessage, setBannerMessage] = useState(""); // Store banner message
-    const [bannerStatus, setBannerStatus] = useState("");
+   
   
   // {console.log(updatedProducts);}
     async function selectProduct() {

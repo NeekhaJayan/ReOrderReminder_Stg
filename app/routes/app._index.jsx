@@ -40,7 +40,7 @@ export const loader = async ({ request }) => {
   }
   const reorderDetails = await productInstance.getAllProductDetails(shop.shop_id);
 
-  return json({ reorderDetails: reorderDetails,shopID:shop.shop_id }); 
+  return json({ reorderDetails: reorderDetails,shopID:shop.shop_id,bufferTime:shop.buffer_time }); 
  
 };
 
