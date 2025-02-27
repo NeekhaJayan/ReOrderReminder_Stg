@@ -60,11 +60,11 @@ export const action = async ({ request }) => {
 
 export default function SettingsPage() {
   const { shop_domain} = useLoaderData();
-  const { files,progress,bannerMessage,bannerStatus,isSyncDisabled,loading,imageUrlForPreview, setBannerMessage, handleSync ,handleSubmit,handleDrop,handleRemoveImage } = useGeneralSettings();
+  const { files,progress,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage, handleSync ,handleSubmit,handleDrop,handleRemoveImage } = useGeneralSettings();
   const { subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } = useEmailSettings();
-  const {selectedTab,tabKey,tabs,handleTabChange,fetcher}=useSettings();
+  const {selectedTab,tabKey,tabs,handleTabChange,fetcher,loading}=useSettings();
   const { plan } = useOutletContext();
-  
+  console.log(loading)
   if (loading) {
     <SkeletonLoad/>
   }
