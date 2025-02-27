@@ -254,7 +254,7 @@ export function useAppData() {
                 const newProducts = resultArray.filter((p) => !existingIds.has(Number(p.shopify_variant_id)));
                 console.log(existingIds)
                 console.log(newProducts)
-                return [...updatedProducts, ...newProducts]; // Merge updated and new products correctly
+                return [...newProducts,...updatedProducts]; // Merge updated and new products correctly
             });
     
             // Reset form states properly

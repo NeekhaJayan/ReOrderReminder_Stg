@@ -36,6 +36,17 @@ export const action = async ({ request }) => {
       return new Response("Webhook received", { status: 200 });
   }
   else{
+        const previousAttributes = payload.previous_attributes || {};
+        const changedKeys = Object.keys(previousAttributes);
+
+        const isInventoryOnlyUpdate = changedKeys.every(
+          (key) => key.startsWith("variants") && key.includes("inventory_quantity")
+        );
+
+        if (isInventoryOnlyUpdate) {
+          console.log("Ignoring product update triggered only by inventory change.");
+          return new Response("Inventory update ignored", { status: 200 });
+        }
         const payloadVariantIds = payload.variants?.map((variant) => variant.id) || [];
         console.log(payloadVariantIds)
         console.log(payload.id)
