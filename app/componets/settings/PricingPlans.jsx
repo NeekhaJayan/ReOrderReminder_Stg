@@ -32,7 +32,7 @@ const PricingPlans = ({ plan } ) => {
       name: 'Free Plan',
       price: '$0.000',
       priceValue: 0.0,
-      url:"/app/upgrade",
+      url:"/app/cancel",
       features: ['5', true, false, '5 days',false,'Email'],
     },
     {
@@ -97,9 +97,7 @@ const PricingPlans = ({ plan } ) => {
                   outline={plan.name !== activePlan}
                   disabled={plan.name === activePlan}
                   onClick={() => {
-                    if (plan.name === 'Pro Plan') {
-                      navigate(plan.url);
-                    }
+                  navigate(plan.url);
                   }}
                 >
                   

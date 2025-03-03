@@ -22,7 +22,7 @@ export const loader = async ({ request }) => {
     
         const subscription = billingCheck.appSubscriptions[0];
         const plan = subscription ? "PRO" : "FREE";
-        console.log(plan)
+        console.log(subscription.id)
         return json({ apiKey: process.env.SHOPIFY_API_KEY || "" ,plan});
         // return {plan};
       } catch (error) {

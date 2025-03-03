@@ -11,10 +11,11 @@ export const loader = async ({ request }) => {
     onFailure: async () => billing.request({
       plan: MONTHLY_PLAN,
       isTest: true,
-      returnUrl: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app/PricingPlans`,
+      returnUrl: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app/settings`,
     }),
     });
 
-    return redirect('/app/PricingPlans');
+    return redirect(`${process.env.APP_NAME}/app/settings?tab=2`);
+
 };
 

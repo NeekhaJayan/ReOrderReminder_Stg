@@ -60,16 +60,16 @@ export const action = async ({ request }) => {
 
 export default function SettingsPage() {
   const { shop_domain} = useLoaderData();
-  const { files,progress,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage, handleSync ,handleSubmit,handleDrop,handleRemoveImage } = useGeneralSettings();
+  const { files,progress,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage, handleSync ,handleSubmit,handleDrop,handleRemoveImage,loading } = useGeneralSettings();
   const { subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } = useEmailSettings();
-  const {selectedTab,tabKey,tabs,handleTabChange,fetcher,loading}=useSettings();
+  const {selectedTab,tabKey,tabs,handleTabChange,fetcher}=useSettings();
   const { plan } = useOutletContext();
   console.log(loading)
-  if (loading) {
-    <SkeletonLoad/>
-  }
+  
 
   return (
+    <>
+    {loading? (<SkeletonLoad/>):(
     <Page
       backAction={{ content: "Settings", url: "/app" }}
       title="Settings"
@@ -123,6 +123,7 @@ export default function SettingsPage() {
           </div>
         </Tabs>
       </Card>
-    </Page>
+    </Page>)}
+    </>
   );
 }

@@ -39,7 +39,7 @@ export const loader = async ({ request }) => {
     throw new Error("Shop data not found in FastAPI after retries");
   }
   const reorderDetails = await productInstance.getAllProductDetails(shop.shop_id);
-
+  console.log(shop.buffer_time);
   return json({ reorderDetails: reorderDetails,shopID:shop.shop_id,bufferTime:shop.buffer_time }); 
  
 };
@@ -93,13 +93,14 @@ export default function Index() {
     selectedVariantId,
     handleChange,plan}=useAppData();
     const { data, state } = fetcher;
-    console.log(data);
+
     const navigate =useNavigate();
-  if (loading) {
-    <SkeletonLoad/>
-  }
+  
 
   return (
+    <>
+    {loading? (<SkeletonLoad/>):(
+      
     <Page>
       
       <Card roundedAbove="sm" padding="400">
@@ -201,6 +202,8 @@ export default function Index() {
 
         </BlockStack>
       </Card>
-    </Page>
+    </Page>)}
+  
+  </>
   );
 };
