@@ -44,7 +44,7 @@ export function useAppData() {
     );  // Track selected products
    
   
-  // {console.log(updatedProducts);}
+
     async function selectProduct() {
         try {
         // Open the Shopify resource picker

@@ -7,7 +7,7 @@ export function useSettings(){
     const [selectedTab, setSelectedTab] = useState(tab!=="" && Number(tab<=2?tab:0));
     const [tabKey, setTabKey] = useState(0);
     const fetcher = useFetcher();
-    const [loading, setLoading] = useState(true);
+    
     const tabs = [
         {
         id: 'general-settings',
@@ -31,5 +31,5 @@ export function useSettings(){
         setSelectedTab(selectedTabIndex);
         setTabKey(tabKey + 1); // Change the key on each selection
     }, [tabKey]);
-    return {selectedTab,tabKey,tabs,handleTabChange,loading,fetcher};
+    return {selectedTab,tabKey,tabs,handleTabChange,fetcher};
 };

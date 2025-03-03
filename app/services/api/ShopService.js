@@ -40,6 +40,7 @@ class Shop{
             const shop_data = shop_body;
             return shop_data.data.shop
     }
+    
    
 }
 const shopInstance = new Shop();
