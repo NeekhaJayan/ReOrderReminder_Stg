@@ -4,7 +4,7 @@ import { authenticate, MONTHLY_PLAN } from "../shopify.server";
 export const loader = async ({ request }) => {
   const { billing,session } = await authenticate.admin(request);
   let {shop}=session
-  let myShop=shop.replace("myshopify.com","")
+  let myShop=shop.replace(".myshopify.com","")
   try {
     const billingCheck = await billing.require({
       plans: [MONTHLY_PLAN],
