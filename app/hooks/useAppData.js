@@ -12,7 +12,8 @@ export function useAppData() {
     const [bannerMessage, setBannerMessage] = useState(""); // Store banner message
     const [bannerStatus, setBannerStatus] = useState("");
     const [searchParams] = useSearchParams();
-    const successMessage = searchParams.get("success") === "pricing_updated";
+    const message = searchParams.get("message");
+    const [showBanner, setShowBanner] = useState(!!message);
     const initialState = {
         productId: "",
         productVariantIds: "",
@@ -27,6 +28,11 @@ export function useAppData() {
     const [editingProduct, setEditingProduct] = useState(null); // Track the product being edited
     const [resetProduct,setResetProduct]=useState(null);
     const [updatedProducts, setUpdatedProducts] = useState(reorderDetails);
+    useEffect(() => {
+        if (message) {
+          setTimeout(() => setShowBanner(false), 5000); // Auto-hide after 5 sec
+        }
+      }, [message]);
     const handleChange = (value)=>{
         if (!value){
             setBannerMessage("Should Enter Estimated Usage Days!!!");
@@ -306,7 +312,7 @@ export function useAppData() {
         selectedProductId,
         selectedVariantId,
         handleChange,plan
-        ,successMessage
+        ,showBanner,message,setShowBanner
       };
 };
 

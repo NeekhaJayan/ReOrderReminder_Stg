@@ -18,7 +18,7 @@ export const loader = async ({ request }) => {
     prorate: true,
     });
     
-    return redirect("/app?success=pricing_updated");
+    return redirect("/app?message=Subscription Canceled successfully");
   
   }
   catch (error) {
