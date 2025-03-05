@@ -1,9 +1,9 @@
 import {
-  Page, Card, Text, Button
+  Page, Card, Text, Button,Modal
 } from "@shopify/polaris";
-import { useFetcher, useNavigate } from "@remix-run/react";
+import { useFetcher} from "@remix-run/react";
 import { useAppBridge } from "@shopify/app-bridge-react";
-
+import { usePlanSettings } from "../../hooks/usePlanSettings";
 import '../../styles/PricingTable.css';
 
 
@@ -11,48 +11,10 @@ import '../../styles/PricingTable.css';
 const PricingPlans = ({ plan } ) => {
   const fetcher = useFetcher();
   const shopify = useAppBridge();
-  const navigate =useNavigate();
-  const handleSubscribe = (price) => {
-    const formData = new FormData();
-    // formData.append("price", price);
-    // formData.append("tab","pricing");
-    // formData.append("shop",shop_domain);
-    // fetcher.submit(formData,{
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    // });
-  };
-  console.log(plan)
+  const{plans,featuresList,handleChoosePlan,handleConfirmDowngrade,activeModal,setActiveModal}=usePlanSettings();
   const activePlan = plan 
-  ? (plan.toUpperCase() === 'FREE' ? 'Free Plan' : 'Pro Plan') 
-  : 'Unknown Plan'; // Handles undefined or null plan
-  
-  const plans = [
-    {
-      name: 'Free Plan',
-      price: '$0.000',
-      priceValue: 0.0,
-      url:"/app/cancel",
-      features: ['5', true, false, '5 days',false,'Email'],
-    },
-    {
-      name: 'Pro Plan',
-      price: '$14.99/mo',
-      priceValue: 9.99,
-      url:"/app/upgrade",
-      features: ['Unlimited', true, true,'Editable', true,'Email & Whatsapp'],
-    },
-  ];
-
-  const featuresList = [
-    'Max Products Configurable',
-    'Automated Reorder Reminders',
-    'Coupon Code Integration',
-    'Buffer Time for Shipping',
-    'Sync Recent Orders',
-    'Priority Customer Support',
-  ];
-
+      ? (plan.toUpperCase() === 'FREE' ? 'Free Plan' : 'Pro Plan') 
+      : 'Unknown Plan'; // Handles undefined or null plan
   return (
     <Page title="Pricing">
       
@@ -96,9 +58,7 @@ const PricingPlans = ({ plan } ) => {
                   primary={plan.name === activePlan} 
                   outline={plan.name !== activePlan}
                   disabled={plan.name === activePlan}
-                  onClick={() => {
-                  navigate(plan.url);
-                  }}
+                  onClick={() => handleChoosePlan(plan.name)}
                 >
                   
                   {plan.name === activePlan ? 'Current Plan' : 'Choose Plan'}
@@ -108,6 +68,28 @@ const PricingPlans = ({ plan } ) => {
           </div>
         </div>
       </Card>
+      <Modal
+        open={activeModal}
+        onClose={() => setActiveModal(false)}
+        title="Cancel Pro Subscription?"
+        primaryAction={{
+          content: "Downgrade to Free Plan",
+          onAction: handleConfirmDowngrade,
+        }}
+        secondaryActions={[
+          {
+            content: "Keep Pro Plan",
+            onAction: () => setActiveModal(false),
+          },
+        ]}
+      >
+        <Modal.Section>
+          <p>
+            Are you sure you want to cancel? Your plan will be downgraded to the Free Plan.
+            Your Pro subscription will be disabled.
+          </p>
+        </Modal.Section>
+      </Modal>
     </Page>
   );
 };
