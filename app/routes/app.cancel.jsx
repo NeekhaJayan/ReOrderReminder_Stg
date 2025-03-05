@@ -17,13 +17,13 @@ export const loader = async ({ request }) => {
     isTest: true,
     prorate: true,
     });
-    return new Response(null, {
-      status: 302,  // Temporary redirect
-      headers: {
-        Location: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app?success=pricing_updated`,
-      },
-    });
-    
+    // return new Response(null, {
+    //   status: 302,  // Temporary redirect
+    //   headers: {
+    //     Location: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app?success=pricing_updated`,
+    //   },
+    // });
+    return redirect("/app?success=pricing_updated")
   //  return redirect(`https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app/settings?tab=2`);
   }
   catch (error) {
