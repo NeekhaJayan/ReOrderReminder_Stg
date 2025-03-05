@@ -11,15 +11,16 @@ export const loader = async ({ request }) => {
     onFailure: async () => billing.request({
       plan: MONTHLY_PLAN,
       isTest: true,
-      returnUrl: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app`,
+      returnUrl: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app?success=pricing_updated`,
     }),
     });
 
-    return new Response(null, {
-      status: 302,  // Temporary redirect
-      headers: {
-        Location: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app?success=pricing_updated`,
-      },
-    });
+    // return new Response(null, {
+    //   status: 302,  // Temporary redirect
+    //   headers: {
+    //     Location: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app?success=pricing_updated`,
+    //   },
+    // });
+    return redirect("/app?success=pricing_updated");
 };
 
