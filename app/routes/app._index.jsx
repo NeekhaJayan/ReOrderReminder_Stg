@@ -91,7 +91,7 @@ export default function Index() {
     toggleModal,
     selectedProductId,
     selectedVariantId,
-    handleChange,plan}=useAppData();
+    handleChange,plan,successMessage}=useAppData();
     const { data, state } = fetcher;
 
     const navigate =useNavigate();
@@ -129,7 +129,11 @@ export default function Index() {
             />
           </MediaCard>
         </div>
-        
+        {successMessage && (
+        <div style={{ padding: "10px", backgroundColor: "green", color: "white", textAlign: "center", marginBottom: "10px" }}>
+          Your pricing plan has been updated successfully.
+        </div>
+        )}
         <BlockStack gap="400" >
           <div style={{paddingLeft:'5rem',paddingRight:'5rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
             <ProductForm bannerMessage={bannerMessage}

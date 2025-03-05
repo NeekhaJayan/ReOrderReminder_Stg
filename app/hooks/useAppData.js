@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback,useLayoutEffect } from "react";
-import { useFetcher, useLoaderData } from "@remix-run/react";
+import { useFetcher, useLoaderData ,useSearchParams} from "@remix-run/react";
 import { useOutletContext } from '@remix-run/react';
 
 export function useAppData() {
@@ -11,6 +11,8 @@ export function useAppData() {
     const [spinner,setSpinner]=useState(false);
     const [bannerMessage, setBannerMessage] = useState(""); // Store banner message
     const [bannerStatus, setBannerStatus] = useState("");
+    const [searchParams] = useSearchParams();
+    const successMessage = searchParams.get("success") === "pricing_updated";
     const initialState = {
         productId: "",
         productVariantIds: "",
@@ -304,6 +306,7 @@ export function useAppData() {
         selectedProductId,
         selectedVariantId,
         handleChange,plan
+        ,successMessage
       };
 };
 
