@@ -20,7 +20,7 @@ export const loader = async ({ request }) => {
     return new Response(null, {
       status: 302,  // Temporary redirect
       headers: {
-        Location: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app/settings?tab=2`,
+        Location: `https://admin.shopify.com/store/${myShop}/apps/${process.env.APP_NAME}/app`,
       },
     });
     
