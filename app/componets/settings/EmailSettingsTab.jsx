@@ -113,7 +113,8 @@ const EmailSettingsTab = ({shop_domain,plan,fetcher,imageUrlForPreview,subject, 
                                         <Icon source={AlertTriangleIcon} color="success" />
                                         <Text as="span" fontWeight="bold">
                                         Coupons Available in Pro Plan
-                                        <Button variant="plain"  >Upgrade Now</Button> 
+                                        <Button variant="plain" onClick={() => {
+                      navigate("/app/settings?tab=2");}} >Upgrade Now</Button> 
                                         </Text>
                                       </div>):null}
                                       onChange={(value) => setDiscountPercent(value)}
