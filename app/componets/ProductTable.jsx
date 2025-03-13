@@ -2,7 +2,7 @@ import {IndexTable,Spinner,Text} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
 import SkeletonLoad from "../componets/SkeletonLoad";
 
-const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId}) => {
+const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,activeEmailModal,toggleEmailModal,showEmailCount,scheduleEmailCount,dispatchEmailCount}) => {
 
     return(
         <>
@@ -16,9 +16,9 @@ const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetR
                 }}
                 itemCount={productData.length}
                 headings={[
+                    { title: "Product Image" },
                     { title: "Product Name" },
                     { title: "Estimated Usage Days" },
-                    { title: "Date created" },
                     {
                     title: spinner ? (
                         <div style={{ display: "flex", alignItems: "center" }}>
@@ -28,7 +28,7 @@ const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetR
                         </Text>
                         </div>
                     ) : (
-                        "Actions"
+                        ""
                     ),
                     },
                 ]}
@@ -49,6 +49,11 @@ const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetR
                     confirmReset={confirmReset}
                     selectedProductId={selected_productId}
                     selectedVariantId={selected_variantId}
+                    activeEmailModal={activeEmailModal} 
+                    toggleEmailModal={toggleEmailModal} 
+                    scheduleEmailCount={scheduleEmailCount} 
+                    dispatchEmailCount={dispatchEmailCount} 
+                    showEmailCount={showEmailCount}
                     />
                 ))}
             </IndexTable>

@@ -1,6 +1,7 @@
 import {
-  Page, Card, Text, Button,Modal
+  Page, Card, Text, Button,Modal,Icon
 } from "@shopify/polaris";
+import { AlertTriangleIcon } from "@shopify/polaris-icons";
 import { useFetcher} from "@remix-run/react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { usePlanSettings } from "../../hooks/usePlanSettings";
@@ -71,7 +72,11 @@ const PricingPlans = ({ plan } ) => {
       <Modal
         open={activeModal}
         onClose={() => setActiveModal(false)}
-        title="Cancel Pro Subscription?"
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Icon source={AlertTriangleIcon} color="warning" /> Confirm Downgrade Subscription
+          </div>
+        }
         primaryAction={{
           content: "Downgrade to Free Plan",
           onAction: handleConfirmDowngrade,
@@ -84,10 +89,14 @@ const PricingPlans = ({ plan } ) => {
         ]}
       >
         <Modal.Section>
-          <p>
-            Are you sure you want to cancel? Your plan will be downgraded to the Free Plan.
-            Your Pro subscription will be disabled.
-          </p>
+        <p>
+        You're about to downgrade to the Free plan. Your Pro features will remain active until the end of your current billing cycle, after which they will be disabled.
+        </p>
+        <ul>
+          <li>No refunds will be issued for the remaining subscription period.</li>
+          <li>You will lose access to Pro features like .</li>
+        </ul>
+        <p>Are you sure you want to continue?</p>
         </Modal.Section>
       </Modal>
     </Page>

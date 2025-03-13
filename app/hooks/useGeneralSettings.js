@@ -14,7 +14,7 @@ export  function useGeneralSettings() {
   const [loading, setLoading] = useState(true);
   const { data, state } = fetcher;
   const uploadFile=settingDetails?.general_settings?.bannerImage
-
+  const [dropzonebanner,setDropzonebanner]=useState("");
   const [bannerMessage, setBannerMessage] = useState(""); // Store banner message
   const [bannerStatus, setBannerStatus] = useState("");
   const [progress, setProgress] = useState(0);
@@ -64,7 +64,17 @@ export  function useGeneralSettings() {
     const handleDrop = useCallback((_droppedFiles, acceptedFiles, rejectedFiles) => {
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
-        setFiles([file]); // Store only the latest uploaded file
+        
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+    
+        img.onload = () => {
+          if (img.width > 500 || img.height > 500) {
+            setDropzonebanner("Please ensure your image dimensions do not exceed 500px in width or height.");
+          } else {
+            setFiles([file]); // Store only the latest uploaded file// 
+          }
+        };
       }
       setRejectedFiles(rejectedFiles);
       setImageChanged(true);
@@ -101,7 +111,7 @@ export  function useGeneralSettings() {
     };
   
 
-  return { files,progress,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage, loading,fetcher, handleSync ,handleSubmit,handleDrop,handleRemoveImage};
+  return { files,progress,bannerMessage,dropzonebanner,bannerStatus,isSyncDisabled,imageUrlForPreview, setDropzonebanner,setBannerMessage, loading,fetcher, handleSync ,handleSubmit,handleDrop,handleRemoveImage};
 };
 
 

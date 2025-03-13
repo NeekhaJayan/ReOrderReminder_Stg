@@ -13,13 +13,18 @@ import EmailSettingsTab from "../componets/settings/EmailSettingsTab";
 import GeneralSettingsTab from "../componets/settings/GeneralSettingsTab";
 import {settingsInstance} from "../services/api/SettingService";
 import { orderInstance } from "../services/api/OrderService";
+import { shopInstance } from "../services/api/ShopService";
+import '../styles/index.css';
+
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
+
   const shop_domain = session.shop;
+  const shop = await shopInstance.getShopDetails(shop_domain);
+  const shop_email=shop.email;
   const settingDetails =await settingsInstance.getSettingData(shop_domain);
-  console.log(settingDetails)
-  return {shop_domain,settingDetails};  
+  return {shop_domain,settingDetails,shop_email};  
 };
 
 
@@ -59,8 +64,8 @@ export const action = async ({ request }) => {
 
 
 export default function SettingsPage() {
-  const { shop_domain} = useLoaderData();
-  const { files,progress,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage, handleSync ,handleSubmit,handleDrop,handleRemoveImage,loading } = useGeneralSettings();
+  const { shop_domain,shop_email} = useLoaderData();
+  const { files,progress,dropzonebanner,bannerMessage,bannerStatus,isSyncDisabled,imageUrlForPreview, setBannerMessage,setDropzonebanner, handleSync ,handleSubmit,handleDrop,handleRemoveImage,loading } = useGeneralSettings();
   const { subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } = useEmailSettings();
   const {selectedTab,tabKey,tabs,handleTabChange,fetcher}=useSettings();
   const { plan } = useOutletContext();
@@ -90,9 +95,11 @@ export default function SettingsPage() {
                          shop_domain={shop_domain} 
                          fetcher={fetcher}  
                          files={files} progress={progress} 
+                         dropzonebanner={dropzonebanner}
                          bannerMessage={bannerMessage}
                          isSyncDisabled={isSyncDisabled} 
                          loading={loading}
+                         setDropzonebanner={setDropzonebanner}
                          setBannerMessage={setBannerMessage}
                           handleSync={handleSync} 
                           handleSubmit={handleSubmit}
@@ -101,6 +108,7 @@ export default function SettingsPage() {
             )}
             {selectedTab === 1 && (
               <EmailSettingsTab  shop_domain={shop_domain} 
+              shop_email={shop_email}
               plan={plan} 
               fetcher={fetcher} 
               imageUrlForPreview={imageUrlForPreview}
@@ -123,6 +131,16 @@ export default function SettingsPage() {
           </div>
         </Tabs>
       </Card>
+      <div className="whatsapp-button">
+          <a
+            href="https://wa.me/6282086660?text=Hello!%20I'm%20interested%20in%20your%20services"
+            
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src="../help.png" alt="Chat with us on WhatsApp" />
+          </a>
+        </div>      
     </Page>)}
     </>
   );

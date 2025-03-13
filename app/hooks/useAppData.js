@@ -12,7 +12,8 @@ export function useAppData() {
     const [bannerMessage, setBannerMessage] = useState(""); // Store banner message
     const [bannerStatus, setBannerStatus] = useState("");
     const [searchParams] = useSearchParams();
-    const message = searchParams.get("message");
+    const rawMessage = searchParams.get("message");
+    const message = rawMessage ? decodeURIComponent(rawMessage) : null;
     const [showBanner, setShowBanner] = useState(!!message);
     const initialState = {
         productId: "",
@@ -30,20 +31,32 @@ export function useAppData() {
     const [updatedProducts, setUpdatedProducts] = useState(reorderDetails);
     useEffect(() => {
         if (message) {
-           setShowBanner(false); // Auto-hide after 5 sec
+          setTimeout(() => setShowBanner(false), 900000); // Auto-hide after 5 sec
         }
       }, [message]);
-    const handleChange = (value)=>{
-        if (!value){
+      const handleChange = (value) => {
+        // Allow only positive numbers
+        if (value < 0) return;
+    
+        setformState((prevState) => ({ ...prevState, date: value }));
+    };
+    
+    const handleBlur = () => {
+        if (!formState.date) {
             setBannerMessage("Should Enter Estimated Usage Days!!!");
             setBannerStatus("critical");
-            return
+            return;
         }
-        if(value<bufferTime){
+    
+        if (formState.date <= bufferTime) {
             setBannerMessage("Estimated Usage Days should be greater than BufferTime!!!");
             setBannerStatus("critical");
-            return}
-        setformState({...formState,date:value})}
+            return;
+        } else {
+            setBannerMessage(""); // Clear the error if input is valid
+            setBannerStatus("");
+        }
+    };
     const [selectedProductIds, setSelectedProductIds] = useState(
         reorderDetails.map(product => ({
         productId: product.shopify_product_id,
@@ -125,11 +138,19 @@ export function useAppData() {
   
    // Handle change in reorder_days field
     const [activeModal, setActiveModal] = useState(false);
+    const [activeEmailModal, setActiveEmailModal] = useState(false);  
+    const [isFetchingEmailCount, setIsFetchingEmailCount] = useState(false);
+    const [scheduleEmailCount, setScheduleEmailCount] = useState(null);
+    const [dispatchEmailCount, setDispatchEmailCount] = useState(null);
     const [selectedProductId, setSelectedProductId] = useState(null);
     const [selectedVariantId, setSelectedVarientId] = useState(null);
-    
+    const toggleEmailModal = useCallback(() => {
+        setActiveEmailModal((prev) => !prev);
+        console.log("toggleEmailModal clicked! New State:", !activeEmailModal);
+    }, []);
     const toggleModal = useCallback(() => {
                 setActiveModal((prev) => !prev);
+                
             }, []);
     const confirmReset = useCallback((productId,variantId) => {
             setSelectedProductId(productId);
@@ -234,6 +255,27 @@ export function useAppData() {
         },
         [fetcher, updatedProducts]
     );
+    const showEmailCount = async (product_id,variant_id) => {
+        try {
+            setIsFetchingEmailCount(true);
+            fetcher.submit(
+                {
+                    shopId: shopID,
+                    productId: product_id,
+                    variantId: variant_id,
+                },
+                { method: "post" }
+            );
+            
+        } catch (error) {
+            setIsFetchingEmailCount(false);
+            console.error("Error fetching email count:", error);
+            
+            
+            
+        }
+    };
+    
     useEffect(() => {
         // Simulate loading when index page loads
         if (reorderDetails) {
@@ -246,18 +288,17 @@ export function useAppData() {
         }
     }, [fetcher.state]);
     useEffect(() => {
+        if (isFetchingEmailCount) return;
         if (fetcher.state === "submitting" || fetcher.state === "loading") {
             setSpinner(true); // Start loading spinner
         } else {
             setSpinner(false); // Stop spinner when data is ready
         }
-    }, [fetcher.state]);
+    }, [fetcher.state, isFetchingEmailCount]);
     
     useLayoutEffect(() => {
-        console.log(data);
-        if (data?.result) {
+        if (data?.type === "updateProduct" && data?.result) {
             const resultArray = Array.isArray(data.result) ? data.result : [data.result]; // Ensure it's an array
-            console.log(resultArray);
     
             setUpdatedProducts((prevData) => {
                 // Create a new array with updated products
@@ -265,14 +306,11 @@ export function useAppData() {
                     const foundProduct = resultArray.find(
                         (newProduct) => Number(newProduct.shopify_variant_id) === product.shopify_variant_id
                     );
-                    return foundProduct ? { ...product, ...foundProduct } : product;
+                    return foundProduct ? { ...product, ...foundProduct,isNew: true } : product;
                 });
-                console.log(updatedProducts)
                 // Check for truly new products
                 const existingIds = new Set(prevData.map((p) => Number(p.shopify_variant_id)));
-                const newProducts = resultArray.filter((p) => !existingIds.has(Number(p.shopify_variant_id)));
-                console.log(existingIds)
-                console.log(newProducts)
+                const newProducts = resultArray.filter((p) => !existingIds.has(Number(p.shopify_variant_id))).map((p) => ({ ...p, isNew: true }));
                 return [...newProducts,...updatedProducts]; // Merge updated and new products correctly
             });
     
@@ -280,12 +318,14 @@ export function useAppData() {
             setFormProductState(initialState);
             setformState('');
         }
+        if (fetcher.data?.type === "fetchEmailCount") {
+            setScheduleEmailCount(fetcher.data.Scheduled_Count);
+            setDispatchEmailCount(fetcher.data.Dispatched_Count);
+            toggleEmailModal();
+        }
     }, [data]);
     
-    
-    
 
-    
     return {
         fetcher,
         shopID,
@@ -308,11 +348,12 @@ export function useAppData() {
         onCancel,
         confirmReset,
         activeModal,
+        activeEmailModal,toggleEmailModal,
         toggleModal,
         selectedProductId,
         selectedVariantId,
-        handleChange,plan
-        ,showBanner,message,setShowBanner
+        handleChange,handleBlur,plan
+        ,showBanner,message,setShowBanner,showEmailCount,scheduleEmailCount,dispatchEmailCount
       };
 };
 

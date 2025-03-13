@@ -5,6 +5,11 @@ export const loader = async ({ request }) => {
   const { billing,session } = await authenticate.admin(request);
   let {shop}=session
   let myShop=shop.replace(".myshopify.com","")
+  const message = encodeURIComponent(`
+    Your plan has been downgraded to the Free plan. Your Pro features will remain active until the end of your current billing cycle, after which they will be disabled.
+    Please note that no refunds are issued for the remaining subscription period.
+    If you ever want to regain access to Pro features, you can upgrade anytime!
+  `);
   try {
     const billingCheck = await billing.require({
       plans: [MONTHLY_PLAN],
@@ -18,7 +23,7 @@ export const loader = async ({ request }) => {
     prorate: true,
     });
     
-    return redirect("/app?message=Subscription Canceled successfully");
+    return redirect(`/app?message=${message}`);
   
   }
   catch (error) {

@@ -20,7 +20,7 @@ import SkeletonLoad from "../componets/SkeletonLoad";
 import { useAppData } from "../hooks/useAppData";
 import { shopInstance } from "../services/api/ShopService";
 import { productInstance } from "../services/api/ProductService";
-
+import '../styles/index.css';
 
 export const loader = async ({ request }) => {
   const {session }=await authenticate.admin(request);
@@ -39,7 +39,6 @@ export const loader = async ({ request }) => {
     throw new Error("Shop data not found in FastAPI after retries");
   }
   const reorderDetails = await productInstance.getAllProductDetails(shop.shop_id);
-  console.log(shop.buffer_time);
   return json({ reorderDetails: reorderDetails,shopID:shop.shop_id,bufferTime:shop.buffer_time }); 
  
 };
@@ -47,17 +46,30 @@ export const loader = async ({ request }) => {
 export const action = async ({ request }) => {
 
   const formData = await request.formData();
+  const reorderdays = Number(formData.get("date")); 
   const method = request.method;
   let result;
   try{
     if (method === "PATCH") {
       result = await productInstance.updateProductData(formData);
-      console.log(result);
       return {success:"",result:result};
-    } else {
-      result = await productInstance.saveProductData(formData);
-      return {success:"Estimated Usage Days saved successfully!",result:result};
+    } else if (method === "POST" && reorderdays) {
+      if (!reorderdays || reorderdays <5 ) {
+        return { type: "updateProduct",success: "Estimated Usage Days should be greater than BufferTime!!!" };
+      }
+      
+      const result = await productInstance.saveProductData(formData);
+      return { type: "updateProduct",success: "Estimated Usage Days saved successfully!", result };
+      
     } 
+    else{
+      const result_data =await productInstance.fetchEmailCount(formData);
+      return json({
+        type: "fetchEmailCount",
+        Scheduled_Count: result_data.Scheduled_Count || 0,
+        Dispatched_Count: result_data.Dispatched_Count || 0
+    });
+    }
   }catch (error) {
     console.error("Error:", error);
     return { error: "Failed to save Estimated Usage Days. Please check your input and try again. If the issue persists, contact support for assistance" };
@@ -88,14 +100,15 @@ export default function Index() {
     onCancel,
     confirmReset,
     activeModal,
+    activeEmailModal,toggleEmailModal,
     toggleModal,
     selectedProductId,
     selectedVariantId,
-    handleChange,plan,showBanner,message,setShowBanner}=useAppData();
+    handleChange,handleBlur,plan,showBanner,message,setShowBanner,showEmailCount,scheduleEmailCount,dispatchEmailCount}=useAppData();
     const { data, state } = fetcher;
 
     const navigate =useNavigate();
-  
+
 
   return (
     <>
@@ -130,8 +143,13 @@ export default function Index() {
           </MediaCard>
         </div>
         {showBanner && (
-          <Banner status="success" onDismiss={() => setShowBanner(false)}>
-            {message}
+          <Banner tone="success" onDismiss={() => setShowBanner(false)}>
+            <p>{message}</p>
+            {plan === "FREE" && (
+            <Button variant="plain" onClick={() => navigate("/app/settings?tab=2")}>
+                Upgrade to Pro
+            </Button>
+            )}
           </Banner>
         )}
         <BlockStack gap="400" >
@@ -140,6 +158,7 @@ export default function Index() {
             bannerStatus={bannerStatus}
             setBannerMessage={setBannerMessage}
             handleChange={handleChange}
+            handleBlur={handleBlur}
             formState={formState}
             formProductState={formProductState}
             selectProduct={selectProduct} 
@@ -172,12 +191,16 @@ export default function Index() {
                             cancelReorderDays={onCancel}
                             handleReorderChange={handleReorderChange} 
                             activeModal={activeModal} 
-                            toggleModal={toggleModal}
+                            activeEmailModal={activeEmailModal} 
+                            toggleEmailModal={toggleEmailModal}
                             confirmReset={confirmReset}
                             selected_productId={selectedProductId}
-                            selected_variantId={selectedVariantId}/>
+                            selected_variantId={selectedVariantId}
+                            showEmailCount={showEmailCount}
+                            scheduleEmailCount={scheduleEmailCount}
+                            dispatchEmailCount={dispatchEmailCount}/>
               )}
-              {plan === "FREE" && updatedProducts.length >= 5 && (
+              {plan === "FREE" && updatedProducts.length >= 2 && (
                   <TextContainer>
                     <Banner  tone="info">
                       <p>
@@ -203,8 +226,18 @@ export default function Index() {
               </Text>
             </Card>
             
-
+            <div className="whatsapp-button">
+          <a
+            href="https://wa.me/6282086660?text=Hello!%20I'm%20interested%20in%20your%20services"
+            
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src="../help.png" alt="Chat with us on WhatsApp" />
+          </a>
+        </div>        
         </BlockStack>
+        
       </Card>
     </Page>)}
   

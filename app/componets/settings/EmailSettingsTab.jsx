@@ -4,9 +4,10 @@ import { InfoIcon,AlertTriangleIcon } from "@shopify/polaris-icons";
 import ReorderEmailPreview from "../settings/ReorderEmailPreview";
 import { useState } from "react";
 
-const EmailSettingsTab = ({shop_domain,plan,fetcher,imageUrlForPreview,subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } ) => {
+const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPreview,subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } ) => {
     const { data, state } = fetcher;
     const [loading, setLoading] = useState(true);
+    const shopname=shop_domain.replace(".myshopify.com","")
     return (
         <>
             <Layout>
@@ -52,7 +53,7 @@ const EmailSettingsTab = ({shop_domain,plan,fetcher,imageUrlForPreview,subject, 
                               </Tooltip>
                                 <TextField
                                   type="text"
-                                  label="From name"
+                                  label="From Name"
                                   name="fromName"
                                   value={fromName}
                                   onChange={(value) => setFromName(value)}
@@ -165,7 +166,7 @@ const EmailSettingsTab = ({shop_domain,plan,fetcher,imageUrlForPreview,subject, 
         
                       <div style={{ marginTop: "var(--p-space-500)" , textAlign: "center"}}>
                           
-                          <ReorderEmailPreview image_path={imageUrlForPreview} />
+                          <ReorderEmailPreview image_path={imageUrlForPreview} mail_id={shop_email} shop={shopname}/>
                       </div>
                       
                       

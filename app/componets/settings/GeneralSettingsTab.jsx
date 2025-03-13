@@ -15,9 +15,9 @@ import {
   } from "@shopify/polaris";
 
 
-const GeneralSettingsTab = ({ shop_domain,fetcher,files,progress,bannerMessage,bannerStatus,isSyncDisabled,loading,setBannerMessage,handleSync,handleSubmit,handleDrop,handleRemoveImage} ) => {
+const GeneralSettingsTab = ({ shop_domain,fetcher,files,progress,dropzonebanner,bannerMessage,bannerStatus,isSyncDisabled,loading,setDropzonebanner,setBannerMessage,handleSync,handleSubmit,handleDrop,handleRemoveImage} ) => {
 
-    const fileUpload = (<DropZone.FileUpload actionHint="We recommend an image which is 600px wide." />);
+    const fileUpload = (<DropZone.FileUpload actionHint="We recommend an image which is 500px wide." />);
     const uploadedFiles =Array.isArray(files) && files.length > 0 ? (
         <LegacyStack vertical>
           {files.map((file, index) => (
@@ -27,9 +27,15 @@ const GeneralSettingsTab = ({ shop_domain,fetcher,files,progress,bannerMessage,b
                 alt={file.name || "Uploaded image"}
               />
                 <Button variant="plain" onClick={handleRemoveImage}>
-                  Remove Upload
+                  Upload a new logo to update
                 </Button>
-              
+                {dropzonebanner && (
+                                                <Banner
+                                                  title={dropzonebanner}
+                                                  tone='critical' // 'success', 'critical', or 'warning'
+                                                  onDismiss={() => setDropzonebanner("")} // Dismiss the banner
+                                                />
+                                              )}
             </LegacyStack>
           ))}
         </LegacyStack>

@@ -103,6 +103,27 @@ class Product{
             return { error: error.message }; 
         }
     }
+    async fetchEmailCount(formData){
+        try {
+            const product_id=formData.get("productId")
+            const variant_id=formData.get("variantId")
+            const shop_id=formData.get("shopId")
+            const url = `https://reorderappapi.onrender.com/auth/email-status_count?product_id=${product_id}&variant_id=${variant_id}&shop_id=${shop_id}`;
+             const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                }
+                
+            });
+            
+            const data= await response.json();
+            return data
+          } catch (error) {
+            console.error("Error fetching email count:", error);
+            
+          }
+    }
     
 }
 const productInstance = new Product();

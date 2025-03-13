@@ -5,13 +5,13 @@ import { ImageIcon } from "@shopify/polaris-icons";
 
 
 
-const ProductForm = ({ bannerMessage,bannerStatus,setBannerMessage,handleChange,formState,formProductState,selectProduct,plan,updatedProducts,fetcher,shopID} ) => {
+const ProductForm = ({ bannerMessage,bannerStatus,setBannerMessage,handleChange,handleBlur,formState,formProductState,selectProduct,plan,updatedProducts,fetcher,shopID} ) => {
     const navigate =useNavigate();
     const [errors, setErrors] = useState({});
 
     return (
     <>
-        <Card background="bg-surface-info-active">
+        <Card background="bg-surface-emphasis-active">
                     <fetcher.Form method="post">
                     <input type="hidden" name="shopid" value={shopID} />
                     <BlockStack gap="500" >
@@ -44,7 +44,7 @@ const ProductForm = ({ bannerMessage,bannerStatus,setBannerMessage,handleChange,
                         </InlineStack>
                         ) : (
                         <BlockStack gap="200">
-                            <Button onClick={selectProduct} id="select-product">
+                            <Button background="text-success-active" color="text-brand-on-bg-fill" onClick={selectProduct} id="select-product">
                             Select product
                             </Button>
                         
@@ -80,7 +80,7 @@ const ProductForm = ({ bannerMessage,bannerStatus,setBannerMessage,handleChange,
                         </BlockStack>
                         <div style={{marginTop:'5px'}}>
                         <div style={{ marginBottom: '1rem' }}>
-                            <TextField label="Estimated Usage Days " type="number" name="date" value={formState.date} onChange={handleChange} autoComplete="off" />                    
+                            <TextField label="Estimated Usage Days " type="number" name="date" value={formState.date} onChange={handleChange} onBlur={handleBlur} autoComplete="off" />                    
                         </div>
                         <div style={{ display: 'grid', justifyContent: 'center' }}>
                             {plan === "FREE" && updatedProducts.length >= 5 ? (

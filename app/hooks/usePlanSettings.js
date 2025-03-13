@@ -23,15 +23,15 @@ export function usePlanSettings(){
       const plans = [
         {
           name: 'Free Plan',
-          price: '$0.000',
-          priceValue: 0.0,
+          price: '$0.00/month',
+          priceValue: 0.00,
           url:"/app/cancel",
-          features: ['5', true, false, '5 days',false,'Email'],
+          features: ['2', true, false, '5 days',false,'Email'],
         },
         {
           name: 'Pro Plan',
-          price: '$14.99/mo',
-          priceValue: 9.99,
+          price: '$14.99/month',
+          priceValue: 14.99,
           url:"/app/upgrade",
           features: ['Unlimited', true, true,'Editable', true,'Email & Whatsapp'],
         },

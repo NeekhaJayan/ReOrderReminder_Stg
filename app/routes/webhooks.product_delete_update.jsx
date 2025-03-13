@@ -6,7 +6,7 @@ export const action = async ({ request }) => {
   // Implement handling of mandatory compliance topics
   // See: https://shopify.dev/docs/apps/build/privacy-law-compliance
   console.log(`Received ${topic} webhook for ${shop}`);
-  console.log(JSON.stringify(payload, null, 2));
+  // console.log(JSON.stringify(payload, null, 2));
   if (topic === 'PRODUCTS_DELETE') {
     const DeletePayload={
       product_id:payload.id,
