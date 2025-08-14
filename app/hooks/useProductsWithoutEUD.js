@@ -4,8 +4,8 @@ import {groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
 export function useProductsWithoutEUD(fetcher) {
-    const {productsWithoutMetafield,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
-    const { setProducts } = useProducts();
+    const {shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
+    const {products, setProducts } = useProducts();
     const [taggedWith, setTaggedWith] = useState('VIP');
     const [queryValue, setQueryValue] = useState(undefined);
     const [formState, setformState] = useState({});
@@ -49,7 +49,7 @@ export function useProductsWithoutEUD(fetcher) {
   }
 }, [fetcher?.data, setProducts]);
     
-    const groupedPending = groupVariantsByProduct(productsWithoutMetafield);
+    const groupedPending = groupVariantsByProduct(products);
     
     const handleChange = (variantId) => (value) => {
       setformState((prev) => ({

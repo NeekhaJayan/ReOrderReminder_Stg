@@ -5,9 +5,9 @@ import {getAllProducts,groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
 export function useProductsWithEUD(fetcher) {
-    const {productsWithMetafield,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
+    const {products,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
     const { setProducts } = useProducts();
-    const groupedConfigured = groupVariantsByProduct(productsWithMetafield);
+    const groupedConfigured = groupVariantsByProduct(products);
     const normalizedAndFiltered = groupedConfigured.filter(product => 
     product && Array.isArray(product.variants) && product.variants.length > 0
         );
