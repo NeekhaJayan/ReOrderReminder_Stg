@@ -8,7 +8,7 @@ export const createEUDMetafieldDefinition = async (admin) => {
       metafieldDefinitionCreate(
         definition: {
           name: "Estimated Usage Days"
-          namespace: "deca_EUD",
+          namespace: "deca_EUD_stg",
           key: "EUD",
           type: "number_integer",
           ownerType: PRODUCTVARIANT
@@ -41,6 +41,45 @@ export const createEUDMetafieldDefinition = async (admin) => {
     }
   
   };
+
+export const deleteEUDMetafieldDefinition = async (admin, definitionId) => {
+  try {
+    const response = await admin.graphql(
+      `#graphql
+        mutation {
+          metafieldDefinitionDelete(id: "${definitionId}") {
+            deletedDefinitionId
+            userErrors {
+              field
+              message
+            }
+          }
+        }`
+    );
+
+    const deleteResponseData = await response.json();
+    console.log(deleteResponseData);
+
+    if (deleteResponseData.errors) {
+      console.error("GraphQL error during deletion:", deleteResponseData.errors);
+      return;
+    }
+
+    const userErrors =
+      deleteResponseData.data.metafieldDefinitionDelete.userErrors;
+    if (userErrors.length > 0) {
+      console.error("User error during deletion:", userErrors);
+      return;
+    }
+
+    console.log(
+      `Successfully deleted metafield definition: ${deleteResponseData.data.metafieldDefinitionDelete.deletedDefinitionId}`
+    );
+  } catch (err) {
+    console.error("Error deleting metafield definition:", err);
+  }
+};
+
   
 export const getAllProducts = async (admin) => {
   const productsWithMetafield = [];
@@ -69,7 +108,7 @@ export const getAllProducts = async (admin) => {
                   id
                   displayName
                   title
-                  metafield(namespace: "deca_EUD", key: "EUD") {
+                  metafield(namespace: "deca_EUD_stg", key: "EUD") {
                     id
                     value
                   }
@@ -105,6 +144,18 @@ export const getAllProducts = async (admin) => {
       const variantData = {
         shopify_product_id: product.id,
         productTitle: product.title,
+    
+//     const response = await admin.graphql(
+//       `#graphql
+//       mutation metafieldDelete($input: MetafieldDeleteInput!) {
+//         metafieldDelete(input: $input) {
+//           deletedId
+//           userErrors {
+//             field
+//             message
+//           }
+//         }
+//       }`,
         shopify_variant_id: variant.id,
         variantTitle: variant.title,
         displayName: variant.displayName,
@@ -139,7 +190,7 @@ export const getMetafieldForProduct = async (admin) => {
 }
   `,{
     variables: {
-    "namespace": "deca_EUD",
+    "namespace": "deca_EUD_stg",
     "key": "EUD",
     "ownerId": "gid://shopify/ProductVariant/42034568659053"
   },
@@ -272,18 +323,6 @@ export const groupVariantsByProduct = (variantList) => {
     return responseData.data.products.edges;
   };
 //   const deleteProductMetafield = async (admin, metafieldId) => {
-    
-//     const response = await admin.graphql(
-//       `#graphql
-//       mutation metafieldDelete($input: MetafieldDeleteInput!) {
-//         metafieldDelete(input: $input) {
-//           deletedId
-//           userErrors {
-//             field
-//             message
-//           }
-//         }
-//       }`,
 //       {
 //         variables: {
 //           "input": {
@@ -596,7 +635,7 @@ export const updateProductVariantMetafield = async (admin,formData) => {
         metafields: [
           {
             ownerId: variantId, // e.g. gid://shopify/ProductVariant/42034568659053
-            namespace: "deca_EUD",
+            namespace: "deca_EUD_stg",
             key: "EUD",
             type: "number_integer",
             value: reorder_days.toString() , // must be a string
