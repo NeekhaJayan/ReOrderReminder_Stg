@@ -1,5 +1,6 @@
-import { useFetcher, useNavigate} from "@remix-run/react";
+import { useNavigate} from "@remix-run/react";
 import { useState } from "react";
+import { ProductIcon,NotificationIcon, DiscountIcon,CalendarTimeIcon,ChartVerticalFilledIcon,OrderIcon,QuestionCircleIcon } from "@shopify/polaris-icons";
 
 export function usePlanSettings(){
     const navigate =useNavigate();
@@ -10,7 +11,9 @@ export function usePlanSettings(){
           // Show modal instead of navigating
           setActiveModal(true);
         } else {
-          navigate("/app/upgrade");
+            navigate("/app/upgrade");
+          // redirect("https://admin.shopify.com/charges/reorder-reminder-pro/pricing_plans");
+          // window.open("https://admin.shopify.com/charges/reorder-reminder-pro/pricing_plans", "_blank");
         }
       };
 
@@ -26,14 +29,14 @@ export function usePlanSettings(){
           price: '$0.00/month',
           priceValue: 0.00,
           url:"/app/cancel",
-          features: ['2', true, false, '5 days',false,'Email'],
+          features: ['2', true, false, '5 days',false,false,'Email'],
         },
         {
           name: 'Pro Plan',
-          price: '$14.99/month',
-          priceValue: 14.99,
+          price: '$12.00/month',
+          priceValue: 12.00,
           url:"/app/upgrade",
-          features: ['Unlimited', true, true,'Editable', true,'Email & Whatsapp'],
+          features: ['Unlimited', true, true,'Editable', true,true,'Email & Whatsapp'],
         },
       ];
     
@@ -42,9 +45,19 @@ export function usePlanSettings(){
         'Automated Reorder Reminders',
         'Coupon Code Integration',
         'Buffer Time for Shipping',
+        'Analytics',
         'Sync Recent Orders',
         'Priority Customer Support',
       ];
+      const iconList = [
+        ProductIcon,
+        NotificationIcon,
+        DiscountIcon,
+        CalendarTimeIcon,
+        ChartVerticalFilledIcon,
+        OrderIcon,
+        QuestionCircleIcon ,
+      ];
     
-    return {plans,featuresList,handleChoosePlan,handleConfirmDowngrade,activeModal,setActiveModal};
+    return {plans,featuresList,iconList,handleChoosePlan,handleConfirmDowngrade,activeModal,setActiveModal};
 };

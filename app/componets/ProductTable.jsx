@@ -2,13 +2,11 @@ import {IndexTable,Spinner,Text} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
 import SkeletonLoad from "../componets/SkeletonLoad";
 
-const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,activeEmailModal,toggleEmailModal,showEmailCount,scheduleEmailCount,dispatchEmailCount}) => {
-
+const ProductTable = ({ productData,minimalView,spinner,reorderState, editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,selectedProductData,activeEditModal,toggleEditModal,activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,editWarningMessages,emailStatus}) => {
+    
     return(
         <>
-            {spinner ? (
-                <SkeletonLoad /> // Show skeleton loader while data is being processed
-            ): (
+            
             <IndexTable
                 resourceName={{
                     singular: "Product",
@@ -31,33 +29,42 @@ const ProductTable = ({ productData,spinner,editingProduct,editReorderDay,resetR
                         ""
                     ),
                     },
+                    {title: "Analytics"},
                 ]}
                 selectable={false}
                 >
-                {productData.map((product) => (
+                {productData.map((productGroup, index) => (
                     <ProductTableRow
-                    key={product.shopify_variant_id}
-                    product={product}
-                    isEditing={editingProduct === product.shopify_variant_id}
-                    onEdit={() => editReorderDay(product.shopify_variant_id)}
+                    key={index}
+                    product={productGroup}
+                    isGrouped
+                    reorderState={reorderState}
+                    isEditing={editingProduct}
+                    onEdit={editReorderDay}
                     onReset={resetReorderfield}
-                    onSave={() => saveReorderDay(product)}
-                    onCancel={()=>cancelReorderDays(product.shopify_variant_id)}
+                    onSave={saveReorderDay}
+                    onCancel={cancelReorderDays}
                     onReorderChange={handleReorderChange}
+                    activeEditModal={activeEditModal}
+                    toggleEditModal={toggleEditModal}
                     activeModal={activeModal}
                     toggleModal={toggleModal}
                     confirmReset={confirmReset}
                     selectedProductId={selected_productId}
                     selectedVariantId={selected_variantId}
+                    selectedProductData={selectedProductData}
                     activeEmailModal={activeEmailModal} 
                     toggleEmailModal={toggleEmailModal} 
                     scheduleEmailCount={scheduleEmailCount} 
                     dispatchEmailCount={dispatchEmailCount} 
-                    showEmailCount={showEmailCount}
+                    orderSource={orderSource}
+                    editWarningMessages={editWarningMessages}
+                    emailStatus={emailStatus}
+                    minimalView={minimalView}
                     />
                 ))}
             </IndexTable>
-            )}
+            
         </>
   );
 };

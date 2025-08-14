@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback,useLayoutEffect } from "react";
 import { useFetcher, useLoaderData ,useSearchParams} from "@remix-run/react";
 import { useOutletContext } from '@remix-run/react';
+import {getAllProducts} from '../utils/shopify';
 
 export function useAppData() {
-    const {reorderDetails,shopID,bufferTime}=useLoaderData();
+    const {reorderDetails,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
     const { plan } = useOutletContext();
     const fetcher = useFetcher();
     const [formState, setformState] = useState('');
@@ -15,6 +16,40 @@ export function useAppData() {
     const rawMessage = searchParams.get("message");
     const message = rawMessage ? decodeURIComponent(rawMessage) : null;
     const [showBanner, setShowBanner] = useState(!!message);
+    
+    const completedSettings = {
+        logoUploaded: Boolean(logo),
+        emailSettingsUpdated: Boolean(templateId),
+        couponDetailsAdded: Boolean(coupon),
+        bufferTimeSet: Boolean(bufferTime),
+      };
+    //   console.log(completedSettings);
+      const filterMessages = () => {
+        const messages = [];
+      
+        if (!completedSettings.logoUploaded) {
+            messages.push("📧 Your logo update is pending. Upload a new logo to complete the setup. ");
+          }
+        if (!completedSettings.emailSettingsUpdated) {
+          messages.push("⚠️ Your email settings need an update. Please review and save changes. ");
+        }
+        
+        if (plan === "PRO") {
+          if (!completedSettings.couponDetailsAdded) {
+            messages.push("💰 Your coupon details are missing. Add them here to activate discounts for your customers. ");
+          }
+      
+          if (!completedSettings.bufferTimeSet) {
+            messages.push("⏳ Buffer time settings need to be updated. Adjust them here to optimize reorder reminders. ");
+          }
+        }
+        
+        return messages;
+      };
+      const [settingsWarningMessages, setSettingsWarningMessages] = useState([]);
+      const [showSettingsBanner, setShowSettingsBanner] = useState(false);
+      
+    // const settingsWarningmessage =  showSettingsBanner ? filteredMessages : [];
     const initialState = {
         productId: "",
         productVariantIds: "",
@@ -29,9 +64,26 @@ export function useAppData() {
     const [editingProduct, setEditingProduct] = useState(null); // Track the product being edited
     const [resetProduct,setResetProduct]=useState(null);
     const [updatedProducts, setUpdatedProducts] = useState(reorderDetails);
+
+    useEffect(() => {
+        const filteredMessages = filterMessages();
+        console.log(filteredMessages);
+        setSettingsWarningMessages(filteredMessages);
+        setShowSettingsBanner(filteredMessages.length > 0);
+      }, [logo, templateId, coupon, bufferTime, plan]);
+
     useEffect(() => {
         if (message) {
-          setTimeout(() => setShowBanner(false), 900000); // Auto-hide after 5 sec
+            fetcher.submit(
+                {
+                  shopId: shopID,
+                  plan:plan,
+                  type:'shop_update'
+                },
+                { method: "patch" }
+              );
+            const timer = setTimeout(() => setShowBanner(false), 30000); // Auto-hide after 5 sec
+            return () => clearTimeout(timer);
         }
       }, [message]);
       const handleChange = (value) => {
@@ -41,21 +93,34 @@ export function useAppData() {
         setformState((prevState) => ({ ...prevState, date: value }));
     };
     
-    const handleBlur = () => {
+    
+    const handleSubmit = (event) => {
+        event.preventDefault();
+    
         if (!formState.date) {
-            setBannerMessage("Should Enter Estimated Usage Days!!!");
+            setBannerMessage("Please enter the estimated usage days. ");
             setBannerStatus("critical");
             return;
         }
     
         if (formState.date <= bufferTime) {
-            setBannerMessage("Estimated Usage Days should be greater than BufferTime!!!");
+            setBannerMessage(`Usage days must be more than <u>${bufferTime}</u> <sup style="font-size: 7px;">(Buffer Time)</sup>. `);
             setBannerStatus("critical");
             return;
-        } else {
-            setBannerMessage(""); // Clear the error if input is valid
-            setBannerStatus("");
         }
+    
+        setBannerMessage("");
+        setBannerStatus("");
+    
+        // If everything is valid, submit the form manually
+        // event.target.submit();
+        const form = event.target;
+        const formData = new FormData(form);
+        fetcher.submit(
+            formData,
+            { method: "post" }
+            );
+
     };
     const [selectedProductIds, setSelectedProductIds] = useState(
         reorderDetails.map(product => ({
@@ -76,6 +141,7 @@ export function useAppData() {
     
         if (products && Array.isArray(products) && products.length > 0) {
             const product = products[0];
+            console.log(product)
             const { id, title, variants, images, handle } = product;
             const selectedId = id.replace("gid://shopify/Product/", "");
     
@@ -94,10 +160,10 @@ export function useAppData() {
             selected.variantIds.includes(singleSelectedVariant.id)
         );
         const variantDetails = selectedVariants.map(
-            variant => `${title} - ${variant.title}` // Concatenate product title and variant title
+            variant => variant.title === "Default Title" ? title : `${title} - ${variant.title}` // Concatenate product title and variant title
         );
         if (existingProduct) {
-            setBannerMessage(`Variant "${variantDetails}" is already selected.`);
+            setBannerMessage(`${variantDetails} is already selected.`);
             setBannerStatus("critical");
             return;
         }
@@ -122,7 +188,7 @@ export function useAppData() {
             productImage: images[0]?.originalSrc || '',
         });
     
-        setBannerMessage(`Variant "${variantDetails}" selected successfully.`);
+        setBannerMessage(`${variantDetails} - selected successfully.`);
         setBannerStatus("success");
         } else {
             console.error("No product selected.");
@@ -135,15 +201,29 @@ export function useAppData() {
         setBannerStatus("critical");
         }
     }
-  
+    async function fetchProducts(admin) {
+        const productList= await getAllProducts(admin);
+        console.log(productList);
+    }
+    
    // Handle change in reorder_days field
     const [activeModal, setActiveModal] = useState(false);
+    const [editWarningMessage, setEditWarningMessage] = useState("");
+    const [activeEditModal, setActiveEditModal] = useState(false);
     const [activeEmailModal, setActiveEmailModal] = useState(false);  
-    const [isFetchingEmailCount, setIsFetchingEmailCount] = useState(false);
+    const [isFetchingEmailCount, setIsFetchingEmailCount] = useState(false); 
     const [scheduleEmailCount, setScheduleEmailCount] = useState(null);
     const [dispatchEmailCount, setDispatchEmailCount] = useState(null);
+    const [orderSource, setOrderSource]= useState(null);
     const [selectedProductId, setSelectedProductId] = useState(null);
     const [selectedVariantId, setSelectedVarientId] = useState(null);
+    const [selectedProductData, setSelectedProductData] = useState(null);
+    const [emailStatus, setEmailStatus] = useState(""); 
+
+    const toggleEditModal = useCallback(() => {
+        setActiveEditModal((prev) => !prev);
+        
+    }, []);
     const toggleEmailModal = useCallback(() => {
         setActiveEmailModal((prev) => !prev);
         console.log("toggleEmailModal clicked! New State:", !activeEmailModal);
@@ -158,6 +238,7 @@ export function useAppData() {
             toggleModal(); // Open the modal
             }, [toggleModal]);
     const handleReorderChange = useCallback((product_id, value) => {
+       
         setUpdatedProducts((prev) =>
         prev.map((product) =>
             product.shopify_variant_id === product_id
@@ -191,7 +272,8 @@ export function useAppData() {
               shopId: shopID,
               productId: updatedProduct.shopify_product_id,
               variantId: updatedProduct.shopify_variant_id,
-              reorder_days: null, // Reset reorder_days to null
+              reorder_days: null,
+              type:'product_update'
             },
             { method: "patch" }
           );
@@ -199,6 +281,9 @@ export function useAppData() {
           // Optimistically update state
           setUpdatedProducts((prev) =>
             prev.filter((product) => product.shopify_variant_id !== variantId)
+          );
+          setSelectedProductIds((prev) =>
+            prev.filter((product) => !product.variantIds.includes(variantId))
           );
         }
     
@@ -223,10 +308,23 @@ export function useAppData() {
     };
     const saveReorderDay = useCallback(
         (product) => {
+            
         const updatedProduct = updatedProducts.find(
             (p) => p.shopify_variant_id === product.shopify_variant_id );
 
+            
         if (updatedProduct) {
+            
+            if (!updatedProduct.reorder_days ) {
+                setEditWarningMessage("Please enter the estimated usage days.");
+                setActiveEditModal(true);
+                return;
+              }
+            if (updatedProduct.reorder_days <= bufferTime) {
+                setEditWarningMessage(`Usage days must be more than <u>${bufferTime}</u> <sup style="font-size: 7px;">(Buffer Time)</sup>.`);
+                setActiveEditModal(true);
+                return;
+              }
             setSpinner(true);
             fetcher.submit(
             {
@@ -234,6 +332,7 @@ export function useAppData() {
                 productId: updatedProduct.shopify_product_id,
                 variantId: updatedProduct.shopify_variant_id,
                 reorder_days: updatedProduct.reorder_days,
+                type:'product_update'
             },
             { method: "patch" }
             );
@@ -255,9 +354,13 @@ export function useAppData() {
         },
         [fetcher, updatedProducts]
     );
-    const showEmailCount = async (product_id,variant_id) => {
+    const showEmailCount = async (product,product_id,variant_id) => {
         try {
+            setSelectedProductData(product);
+            setSelectedProductId(product_id);
+            setSelectedVarientId(variant_id);
             setIsFetchingEmailCount(true);
+            setEmailStatus("");
             fetcher.submit(
                 {
                     shopId: shopID,
@@ -275,6 +378,19 @@ export function useAppData() {
             
         }
     };
+
+    const testEmailReminder=async(product_id,variant_id)=>{
+        fetcher.submit(
+                {
+                    shopId: shopID,
+                    productId: product_id,
+                    variantId: variant_id,
+                    type:"test_email",
+                },
+                { method: "post" }
+            );
+        
+    }
     
     useEffect(() => {
         // Simulate loading when index page loads
@@ -318,17 +434,22 @@ export function useAppData() {
             setFormProductState(initialState);
             setformState('');
         }
-        if (fetcher.data?.type === "fetchEmailCount") {
+        if (fetcher.data?.type === "fetchEmailCount") {    
             setScheduleEmailCount(fetcher.data.Scheduled_Count);
             setDispatchEmailCount(fetcher.data.Dispatched_Count);
+            setOrderSource(fetcher.data.Reorder_Email_Source);
             toggleEmailModal();
+        }
+        if (fetcher.data?.type === "testEmailSent") {    
+            setEmailStatus(fetcher.data.message);
         }
     }, [data]);
     
-
     return {
         fetcher,
         shopID,
+        templateId,
+        bufferTime,
         formState,
         setformState,
         formProductState,
@@ -349,11 +470,13 @@ export function useAppData() {
         confirmReset,
         activeModal,
         activeEmailModal,toggleEmailModal,
+        activeEditModal,toggleEditModal,
         toggleModal,
         selectedProductId,
         selectedVariantId,
-        handleChange,handleBlur,plan
-        ,showBanner,message,setShowBanner,showEmailCount,scheduleEmailCount,dispatchEmailCount
+        selectedProductData,
+        handleChange,handleSubmit,plan
+        ,showBanner,message,setShowBanner,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,editWarningMessage,showSettingsBanner,setShowSettingsBanner,settingsWarningMessages,emailStatus
       };
 };
 

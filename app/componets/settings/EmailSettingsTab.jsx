@@ -1,18 +1,24 @@
 
-import { Card, FormLayout, TextField, Tooltip, Icon, Button,Layout,BlockStack ,Text,Box,Bleed} from "@shopify/polaris";
+import { Card, FormLayout, TextField, Tooltip, Icon, Button,Layout,BlockStack ,Text,Box,Bleed,Banner} from "@shopify/polaris";
 import { InfoIcon,AlertTriangleIcon } from "@shopify/polaris-icons";
 import ReorderEmailPreview from "../settings/ReorderEmailPreview";
 import { useState } from "react";
+import { useNavigate } from "@remix-run/react";
 
-const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPreview,subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime } ) => {
+
+const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPreview,subject, setSubject, fromName, setFromName, fromEmail, setFromEmail, coupon, setCoupon, discountPercent, setDiscountPercent,bufferTime, setBufferTime, emailSettingsbanner,setEmailSettingsBanner } ) => {
     const { data, state } = fetcher;
     const [loading, setLoading] = useState(true);
-    const shopname=shop_domain.replace(".myshopify.com","")
+    const shopname=shop_domain.replace(".myshopify.com","");
+    
+    const navigate =useNavigate();
     return (
         <>
             <Layout>
+            
                 <Layout.Section variant="oneThird">
                   <div style={{ marginTop: "var(--p-space-500)" }}>
+                  
                     <BlockStack gap="4" >
                       <Text id="emailSettings" variant="headingMd" as="h2">
                         Reminder Email Settings
@@ -24,6 +30,16 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                   </div>
                 </Layout.Section>
                 <Layout.Section>
+                {emailSettingsbanner  && (
+                      <Banner tone="critical" onDismiss={() => setEmailSettingsBanner("")}>
+                        <p>{emailSettingsbanner}{"contact "}  
+                        <Tooltip active content={shop_email} hasUnderline>
+                      <Text variant="bodyLg" fontWeight="bold" as="span">
+                      support
+                      </Text>
+                    </Tooltip>{" for assistance."}</p>
+                      </Banner>
+                    )}
                 <fetcher.Form method="post">
                   <Card sectioned roundedAbove="sm">
                     <FormLayout>
@@ -44,7 +60,7 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                                 value={subject}
                                 onChange={(value) => setSubject(value)}
                                 autoComplete="off"
-                                placeholder="Time to Restock Your Product"
+                                placeholder="eg:Time to Restock Your Product"
                               />
                               <Tooltip dismissOnMouseOut content="Set the default subject line for automated emails sent to your customers.">
                                 <div style={{ marginRight: "8px" }}>
@@ -58,7 +74,7 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                                   value={fromName}
                                   onChange={(value) => setFromName(value)}
                                   autoComplete="off"
-                                  placeholder="Your Store Name"
+                                  placeholder="eg:Your Store Name"
                                 />
                                 <Tooltip dismissOnMouseOut content="This is the name that customers will see as the sender of the email (e.g., Your Store Name).">
                                   <div style={{ marginRight: "8px" }}>
@@ -67,12 +83,12 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                                 </Tooltip>
                                 <TextField
                                   type="email"
-                                  label="From Email"
+                                  label="Reply-To Email"
                                   name="fromEmail"
                                   value={fromEmail}
                                   onChange={(value) => setFromEmail(value)}
                                   autoComplete="email"
-                                  placeholder="Your Store Email"
+                                  placeholder="eg:Your Store Email"
                                 />
                                 <Tooltip dismissOnMouseOut content="This is the email that customers will see as the sender email (e.g., Your Store Name).">
                                   <div style={{ marginRight: "8px" }}>
@@ -94,7 +110,7 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                                       name="coupon"
                                       value={coupon}
                                       disabled={plan!== 'PRO'}
-            
+                                      placeholder="eg:SAVE10"
                                       onChange={(value) => setCoupon(value)}
                                       autoComplete="off"
                                     />
@@ -106,7 +122,7 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                                 </div>
                                 <div style={{display: "flex", alignItems: "end" }}>
                                   <TextField
-                                      label="Coupon Discount Percentage"
+                                      label="Coupon Discount Message"
                                       name="discountPercent"
                                       value={discountPercent}
                                       disabled={plan!== 'PRO'}
@@ -114,14 +130,14 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                                         <Icon source={AlertTriangleIcon} color="success" />
                                         <Text as="span" fontWeight="bold">
                                         Coupons Available in Pro Plan
-                                        <Button variant="plain" onClick={() => {
-                      navigate("/app/settings?tab=2");}} >Upgrade Now</Button> 
+                                        <Button variant="plain" onClick={() => navigate("/app/settings?tab=2")}>Upgrade Now</Button> 
                                         </Text>
                                       </div>):null}
                                       onChange={(value) => setDiscountPercent(value)}
+                                      placeholder="eg:Save 10% on your next order!"
                                       autoComplete="off"
                                     />
-                                  <Tooltip dismissOnMouseOut content="Enter the discount percentage (e.g., 10 for 10%) to be applied to reorder reminders.">
+                                  <Tooltip dismissOnMouseOut content='This message will appear in reminder emails along with the coupon code. You can include discount details like "Save 15%" or "Free shipping on your next order".'>
                                     <div style={{ marginRight: "8px" }}>
                                       <Icon source={InfoIcon} tone="base" />
                                     </div>
@@ -190,7 +206,8 @@ const EmailSettingsTab = ({shop_domain,shop_email,plan,fetcher,imageUrlForPrevie
                 {/* {loading && <div className="loader">Loading...</div>} */}
                 {state === "submitting" && <p>Submitting...</p>}
             {data?.error && <p style={{ color: "red" }}>Error: {data.error}</p>}
-            {data?.success && <p style={{ color: "darkgreen" }}>{data.success}</p>}
+            {data?.success && <p style={{ color: "darkgreen" }}>{data.success}<Button variant="plain" onClick={() => {
+              navigate("/app");}} >Home</Button></p>}
                 </Layout.Section>
                 
               </Layout>

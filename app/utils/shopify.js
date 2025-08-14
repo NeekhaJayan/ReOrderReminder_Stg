@@ -1,19 +1,17 @@
 // // Update your function to create and pin a metafield definition
 
 
-export const createAndPinReorderDaysMetafieldDefinition = async (admin) => {
+export const createEUDMetafieldDefinition = async (admin) => {
     const response = await admin.graphql(
       `#graphql
          mutation {
       metafieldDefinitionCreate(
         definition: {
-          namespace: "deca_reorderday_stg",
-          key: "reorder_days",
+          name: "Estimated Usage Days"
+          namespace: "deca_EUD",
+          key: "EUD",
           type: "number_integer",
-          name: "Configure Product Usage Days",
-          description: "Number of days until reorder",
-          ownerType: PRODUCT,
-          pin: true
+          ownerType: PRODUCTVARIANT
         }
       ) {
         createdDefinition {
@@ -30,6 +28,7 @@ export const createAndPinReorderDaysMetafieldDefinition = async (admin) => {
     }`
     );
     const createResponseData = await response.json();
+    console.log(createResponseData);
     if (createResponseData.errors) {
       console.error("GraphQL error during creation:", createResponseData.errors);
       return;
@@ -43,84 +42,171 @@ export const createAndPinReorderDaysMetafieldDefinition = async (admin) => {
   
   };
   
-  const getAllProducts = async (admin) => {
-    const response = await admin.graphql(
-      `#graphql
-      query {
-        products(first: 50) {  
-          edges {
-            node {
-              id
-              title
+export const getAllProducts = async (admin) => {
+  const productsWithMetafield = [];
+  const productsWithoutMetafield = [];
+
+  const response = await admin.graphql(
+    `#graphql
+    query {
+      products(first: 50) {
+        edges {
+          node {
+            id
+            title
+            images(first: 50) {
+            edges {
+              node {
+                id
+                originalSrc
+                altText
+                }
+              }
+            }
+            variants(first: 50) {
+              edges {
+                node {
+                  id
+                  displayName
+                  title
+                  metafield(namespace: "deca_EUD", key: "EUD") {
+                    id
+                    value
+                  }
+                }
+              }
             }
           }
         }
       }
-    `);
-  
-    const responseData = await response.json();
-  
-    if (responseData.errors) {
-      console.error("GraphQL error while fetching products:", responseData.errors);
-      return;
-    }
-  
-    const products = responseData.data.products.edges.map(edge => edge.node);
-    return products;
-  };
-  const getMetafieldForProduct = async (admin, productId) => {
-   const response = await admin.graphql(
-      `#graphql
-      query GetProductMetafield($productId: ID!) {
-        product(id: $productId) {
-          metafield(namespace: "deca_reorderday_stg", key: "reorder_days") {
-            id
-            namespace
-            key
-            value
-          }
-        }
+    }`
+  );
+
+  const responseData = await response.json(); 
+  if (responseData.errors) {
+    console.error("GraphQL errors:", responseData.errors);
+    return { productsWithMetafield, productsWithoutMetafield };
+  }
+
+  const productNodes = responseData?.data?.products?.edges || [];
+
+  for (const productEdge of productNodes) {
+    const product = productEdge.node;
+    const productImage = product.images.edges[0]?.node || null;
+    const variants = product.variants.edges.map((v) => v.node);
+
+    for (const variant of variants) {
+      const hasValidMetafield =
+        variant.metafield &&
+        variant.metafield.value !== null &&
+        variant.metafield.value.trim() !== ''&&
+      variant.metafield.value.trim() !== '0';
+
+      const variantData = {
+        shopify_product_id: product.id,
+        productTitle: product.title,
+        shopify_variant_id: variant.id,
+        variantTitle: variant.title,
+        displayName: variant.displayName,
+        reorder_days: variant.metafield,
+        productImage,
+      };
+
+    if (hasValidMetafield) {
+        productsWithMetafield.push(variantData);
+      } else {
+        productsWithoutMetafield.push(variantData);
       }
-    `,{
-      variables: {
-        productId:productId,
-      },
-    },);
-  
-    const responseData = await response.json();
-  
-    if (responseData.errors) {
-      console.error("GraphQL error while fetching metafield:", responseData.errors);
-      return;
-    }
-  
-    return responseData.data.product.metafield;
+   }
+  }
+  // console.log(productsWithMetafield);
+  return {
+    productsWithMetafield,
+    productsWithoutMetafield,
   };
+};
+
+export const getMetafieldForProduct = async (admin) => {
+  const productId="gid://shopify/ProductVariant/42034568659053"
+  const response = await admin.graphql(
+    `#graphql
+    query ProductVariantMetafield($namespace: String!, $key: String!, $ownerId: ID!) {
+  productVariant(id: $ownerId) {
+    linerMaterial: metafield(namespace: $namespace, key: $key) {
+      value
+    }
+  }
+}
+  `,{
+    variables: {
+    "namespace": "deca_EUD",
+    "key": "EUD",
+    "ownerId": "gid://shopify/ProductVariant/42034568659053"
+  },
+  },);
+
+  const data = await response.json();
+
+  if (data.errors) {
+    console.error("GraphQL error while fetching metafield:", data.errors);
+    return;
+  }
+
+  return data;
+};
   
-  export const listProductsWithMetafields = async (admin) => {
-    // Step 1: Fetch all products
-    const products = await getAllProducts(admin);
-    if (!products) {
-      return;
+export const listProductsWithMetafields = async (admin) => {
+  // Step 1: Fetch all products
+  const products = await getAllProducts(admin);
+  if (!products) {
+    return;
+  }
+  const productData = [];
+  // Step 2: For each product, fetch its metafields
+  for (const product of products) {
+    const metafields = await getMetafieldForProduct(admin, product.id);
+    // Check if metafield data exists and is not null
+    if (metafields) {
+      productData.push({
+        productId: product.id,
+        productTitle: product.title,
+        created_at: product.created_at,
+        reorder_days: metafields.value, // Assign the metafield's value to reorder_days
+      });
+      // console.log(`Product: ${product.title} (ID: ${product.id})`);
+      // console.log(`  - Metafield: ${metafields.namespace}.${metafields.key} = ${metafields.value}`);
     }
-    const productData = [];
-    // Step 2: For each product, fetch its metafields
-    for (const product of products) {
-      const metafields = await getMetafieldForProduct(admin, product.id);
-      // Check if metafield data exists and is not null
-      if (metafields) {
-        productData.push({
-          productId: product.id,
-          productTitle: product.title,
-          created_at: product.created_at,
-          reorder_days: metafields.value, // Assign the metafield's value to reorder_days
-        });
-        // console.log(`Product: ${product.title} (ID: ${product.id})`);
-        // console.log(`  - Metafield: ${metafields.namespace}.${metafields.key} = ${metafields.value}`);
-      }
+  }
+  return productData
+};
+
+export const groupVariantsByProduct = (variantList) => {
+  // console.log(variantList);
+  const productMap = new Map();
+
+  for (const variant of variantList) {
+    const productId = variant.shopify_product_id;
+
+    if (!productMap.has(productId)) {
+      productMap.set(productId, {
+        shopify_product_id: productId,
+        productTitle: variant.productTitle,
+        productImage: variant.productImage,
+        variants: [],
+      });
     }
-    return productData
-  };
+
+    productMap.get(productId).variants.push({
+      variantTitle: variant.variantTitle,
+      displayName: variant.displayName,
+      shopify_variant_id: variant.shopify_variant_id,
+      reorder_days: variant.reorder_days?.value || null,
+    });
+  }
+
+  return Array.from(productMap.values());
+};
+
   
 //   const getMetafieldDefinitionId = async (admin) => {
 //     const response = await admin.graphql(
@@ -238,7 +324,7 @@ export const createAndPinReorderDaysMetafieldDefinition = async (admin) => {
 //         console.log(`Deleting metafield: ${metafieldId} for product: ${product.node.id}`);
 //         const deleteResult = await deleteProductMetafield(admin, metafieldId);
   
-//         if (deleteResult?.deletedMetafieldId) {
+//         if (deleteResult?.deletedMetafieldId) {er
 //           console.log(`Successfully deleted metafield: ${deleteResult.deletedMetafieldId}`);
 //         } else {
 //           console.error("Failed to delete metafield:", deleteResult?.userErrors);
@@ -481,6 +567,58 @@ export const getShopDetails = async (admin) =>{
     return shop_data.data.shop
   
 }
+
+export const updateProductVariantMetafield = async (admin,formData) => {
+  const productId = formData.get("productId");
+  const variantId = formData.get("productVariantId");
+  const rawValue = formData.get("reorder_days");
+  const reorder_days = rawValue && !isNaN(rawValue) ? parseInt(rawValue, 10) : 0;
+  
+  const response = await admin.graphql(
+    `#graphql
+    mutation setMetafield($metafields: [MetafieldsSetInput!]!) {
+      metafieldsSet(metafields: $metafields) {
+        metafields {
+          id
+          key
+          namespace
+          value
+          type
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }`,
+    {
+      variables: {
+        metafields: [
+          {
+            ownerId: variantId, // e.g. gid://shopify/ProductVariant/42034568659053
+            namespace: "deca_EUD",
+            key: "EUD",
+            type: "number_integer",
+            value: reorder_days.toString() , // must be a string
+          },
+        ],
+      },
+    }
+  );
+
+  const json = await response.json();
+  if (json.errors) {
+    console.error("GraphQL error:", json.errors);
+    return null;
+  }
+  if (json.data.metafieldsSet.userErrors.length > 0) {
+    console.error("User errors:", json.data.metafieldsSet.userErrors);
+    return null;
+  }
+
+  return json.data.metafieldsSet.metafields[0];
+};
+
 
 
 

@@ -1,4 +1,5 @@
 import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
 
 export const action = async ({ request }) => {
   const { shop, topic } = await authenticate.webhook(request);
@@ -25,7 +26,12 @@ export const action = async ({ request }) => {
       console.error('Error sending data to FastAPI:', error.message);
     });
   
-  
+   try {
+    await prisma.session.deleteMany({ where: { shop: shop_domain } });
+    console.log("Session deleted from Prisma for:", shop_domain);
+    } catch (err) {
+    console.error(" Failed to delete session from Prisma:", err.message);
+    }
 
   return new Response();
 };

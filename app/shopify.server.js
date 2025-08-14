@@ -6,7 +6,7 @@ import {
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { restResources } from "@shopify/shopify-api/rest/admin/2024-10";
-import {getShopDetails} from './utils/shopify';
+import {createEUDMetafieldDefinition} from './utils/shopify';
 
 // import { restResources } from "@shopify/shopify-api/rest/admin/2024-07";
 import prisma from "./db.server";
@@ -25,7 +25,7 @@ const shopify = shopifyApp({
     [MONTHLY_PLAN]: {
       lineItems: [
         {
-          amount: 14.99,
+          amount: 12.00,
           currencyCode: 'USD',
           interval: BillingInterval.Every30Days,
         }
@@ -34,34 +34,20 @@ const shopify = shopifyApp({
   },
   hooks: {
     afterAuth: async ({ admin,session }) => {
-      await shopify.registerWebhooks({ session });
-      // const shopName = session.shop.split(".")[0];
-      const shopDetail=await getShopDetails(admin);
-      const shop_payload_details={
-        shopify_domain: session.shop,
-        shop_name:shopDetail.name,
-        email:shopDetail.email
+      await shopify.registerWebhooks({session});
+      try{
+        console.log(admin);
+        const metafield = await createEUDMetafieldDefinition(admin);
+        console.log(metafield);
       }
-      await fetch('https://reorderappapi.onrender.com/auth/shops/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // Ensure the correct content type
-        },
-        body: JSON.stringify(shop_payload_details), // Convert object to JSON string
-      })
-        .then(async (response) => {
-          if (!response.ok) {
-            const errorDetails = await response.json();
-            throw new Error(`Error from server: ${response.status} - ${errorDetails.message}`);
-          }
-          return response.json(); // Parse the JSON response from the server
-        })
-        .then((data) => {
-          console.log('Data successfully sent to FastAPI:', data);
-        })
-        .catch((error) => {
-          console.error('Error sending data to FastAPI:', error.message);
-        });
+      catch (error) {
+        if ("graphQLErrors" in error) {
+          console.error(error.graphQLErrors);
+        } else {
+          console.error(error);
+        }
+      }
+      
     },
   },
   future: {

@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useFetcher,useLoaderData } from "@remix-run/react";
 import { useOutletContext } from '@remix-run/react';
-import {settingsInstance} from "../services/api/SettingService";
 
 export  function useGeneralSettings() {
-  const { shop_domain, settingDetails } = useLoaderData();
+  const { shop_domain, settingDetails,createdAt,product_count,order_sync_count} = useLoaderData();
   const { plan } = useOutletContext();
   const fetcher = useFetcher();
   const [files, setFiles] = useState([]);
@@ -19,12 +18,20 @@ export  function useGeneralSettings() {
   const [bannerStatus, setBannerStatus] = useState("");
   const [progress, setProgress] = useState(0);
   const [isSyncDisabled, setIsSyncDisabled] = useState(plan === 'FREE');
-
- 
+  const [currentAction, setCurrentAction] = useState(null);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const hasConfiguredProducts = Number(product_count);
     useEffect(() => {
         // Optional: Handle the case where settingDetails are fetched but not immediately available
         if (settingDetails) {
-          setIsSyncDisabled(!settingDetails.general_settings.syncStatus);
+          if (plan === 'FREE') {
+            setIsSyncDisabled(false);
+          }
+          else
+          {
+            setIsSyncDisabled(settingDetails.general_settings.syncStatus);
+          }
+          
           if (uploadFile) {
             setFiles([{
               name: settingDetails?.general_settings?.bannerImageName , // You can replace this with the actual file name
@@ -38,29 +45,49 @@ export  function useGeneralSettings() {
         setTimeout(() => setLoading(false), 2000); // Add artificial delay for demonstration
         
       }, [settingDetails, uploadFile]);
+
+    useEffect(() => {
+      if (fetcher.state === "idle" && fetcher.data ) {
+        if (currentAction === 'syncOrders') {
+          if (fetcher.data.error) {
+            setBannerMessage(fetcher.data.error || "Failed to fetch orders");
+            setBannerStatus("error");
+          } else {
+            setBannerMessage(fetcher.data.message || "Orders synced successfully!");
+            setBannerStatus("success");
+          }
+          setProgress(100);
+        }
+        setCurrentAction(null);
+      }
+    }, [fetcher.data, fetcher.state,fetcher.key]);
+    
+    
     const handleSync = useCallback(() => {
-        setBannerMessage("Syncing orders...");
-        setBannerStatus("info");
-        const formData = new FormData();
-        formData.append("tab", "general-settings");
-        formData.append("shop",shop_domain)
-        fetcher.submit(formData, {
-          method: "POST",
-        });
-        
-        const interval = setInterval(() => {
-          setProgress((prev) => {
-            if (prev >= 100) {
-              clearInterval(interval); // Clear interval when progress reaches 100%
-              setBannerMessage(fetcher.data.message); // Update success message
-              setBannerStatus("success");
-              return 100; // Ensure progress doesn't exceed 100
-            }
-            return prev + 10; // Increment progress
-          });
-        }, 500); 
+      setBannerMessage("Syncing orders...");
+      setBannerStatus("info");
+      setCurrentAction('syncOrders');
+    
+      const formData = new FormData();
+      formData.append("tab", "general-settings");
+      formData.append("shop", shop_domain);
+      formData.append("createdAt",createdAt);
+      formData.append("order_sync_count",order_sync_count);
+
+      fetcher.submit(formData, { method: "POST" });
       setProgress(0);
-      }, [fetcher,shop_domain]);  // Add dependencies to the useCallback hook
+    
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(interval); // Stop just before 100
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 500);
+    }, [fetcher, shop_domain]);
+      // Add dependencies to the useCallback hook
     const handleDrop = useCallback((_droppedFiles, acceptedFiles, rejectedFiles) => {
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
@@ -73,6 +100,7 @@ export  function useGeneralSettings() {
             setDropzonebanner("Please ensure your image dimensions do not exceed 500px in width or height.");
           } else {
             setFiles([file]); // Store only the latest uploaded file// 
+            setDropzonebanner("");
           }
         };
       }
@@ -94,16 +122,18 @@ export  function useGeneralSettings() {
     
     const handleSubmit = async (event) => {
       event.preventDefault(); 
-      setLoading(true);
+      setCurrentAction('saveImage');
       const formData = new FormData();
-      console.log(formData)
-      formData.append("bannerImage", files[0]); // Ensure files is an array
-      
-    
+      formData.append("bannerImage", files[0]);  
       try {
-        const AWS_Upload_func =await settingsInstance.uploadImage(shop_domain,formData);
-        console.log("Upload success:", AWS_Upload_func);
-        setLoading(false);
+        setLoading(true);
+        fetcher.submit(formData, {
+          method: "post",
+          encType: "multipart/form-data"
+        });
+        // const AWS_Upload_func =await settingsInstance.uploadImage(shop_domain,formData);
+        // setLoading(false);
+        // return { success: AWS_Upload_func };
       } catch (error) {
         console.error("Upload failed:", error);
         setLoading(false);
@@ -111,7 +141,7 @@ export  function useGeneralSettings() {
     };
   
 
-  return { files,progress,bannerMessage,dropzonebanner,bannerStatus,isSyncDisabled,imageUrlForPreview, setDropzonebanner,setBannerMessage, loading,fetcher, handleSync ,handleSubmit,handleDrop,handleRemoveImage};
+  return { files,progress,bannerMessage,dropzonebanner,bannerStatus,isSyncDisabled,imageUrlForPreview, setDropzonebanner,setBannerMessage, loading,fetcher, handleSync ,handleSubmit,handleDrop,handleRemoveImage,showSyncModal,setShowSyncModal,hasConfiguredProducts,order_sync_count};
 };
 
 
