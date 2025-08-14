@@ -90,7 +90,7 @@ class Shop{
   async createShop(shop_payload_details){
         try{
             console.log("hai")
-            const response = await fetch(`http://127.0.0.1:8000/auth/shops/`, {
+            const response = await fetch(`https://api-reorderreminderpro-stg.onrender.com/auth/shops/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json', // Ensure the correct content type
