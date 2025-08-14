@@ -6,6 +6,9 @@ import { useProducts } from "../componets/ProductContext";
 export function useProductsWithoutEUD(fetcher) {
     const {shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
     const {products, setProducts } = useProducts();
+    const productsWithoutMetafield = products.filter(
+  p => p.variants.some(v => !v.reorder_days)
+);
     const [taggedWith, setTaggedWith] = useState('VIP');
     const [queryValue, setQueryValue] = useState(undefined);
     const [formState, setformState] = useState({});
@@ -49,7 +52,7 @@ export function useProductsWithoutEUD(fetcher) {
   }
 }, [fetcher?.data, setProducts]);
     
-    const groupedPending = groupVariantsByProduct(products);
+    const groupedPending = groupVariantsByProduct(productsWithoutMetafield);
     
     const handleChange = (variantId) => (value) => {
       setformState((prev) => ({

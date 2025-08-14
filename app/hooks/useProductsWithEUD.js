@@ -7,7 +7,11 @@ import { useProducts } from "../componets/ProductContext";
 export function useProductsWithEUD(fetcher) {
     const {shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
     const {products, setProducts } = useProducts();
-    const groupedConfigured = groupVariantsByProduct(products);
+    const productsWithMetafield = products.filter(
+  p => p.variants.every(v => v.reorder_days)
+);
+
+    const groupedConfigured = groupVariantsByProduct(productsWithMetafield);
     const normalizedAndFiltered = groupedConfigured.filter(product => 
     product && Array.isArray(product.variants) && product.variants.length > 0
         );
