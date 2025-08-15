@@ -1,5 +1,28 @@
 // // Update your function to create and pin a metafield definition
 
+const getMetafieldQuery = `
+query getMetafieldDefinition($key: String!, $namespace: String!, $ownerType: MetafieldOwnerType!) {
+  metafieldDefinitions(first: 1, key: $key, namespace: $namespace, ownerType: $ownerType) {
+    nodes {
+      id
+    }
+  }
+}
+`;
+export const getMetafield= async (admin)=> {
+  const response = await admin.graphql(getMetafieldQuery, {
+    variables: {
+      key: "EUD_STG",
+      namespace: "deca_EUD_stg",
+      ownerType: "PRODUCTVARIANT",
+    },
+  });
+
+  const json = await response.json();
+  return json.data?.metafieldDefinitions.nodes[0];
+};
+
+
 
 export const createEUDMetafieldDefinition = async (admin) => {
     const response = await admin.graphql(

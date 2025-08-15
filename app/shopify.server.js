@@ -6,7 +6,7 @@ import {
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { restResources } from "@shopify/shopify-api/rest/admin/2024-10";
-import {createEUDMetafieldDefinition} from './utils/shopify';
+import {getMetafield,createEUDMetafieldDefinition} from './utils/shopify';
 
 // import { restResources } from "@shopify/shopify-api/rest/admin/2024-07";
 import prisma from "./db.server";
@@ -36,9 +36,15 @@ const shopify = shopifyApp({
     afterAuth: async ({ admin,session }) => {
       await shopify.registerWebhooks({session});
       try{
-        console.log(admin);
-        const metafield = await createEUDMetafieldDefinition(admin);
-        console.log(metafield);
+        let metafield = await getMetafield(admin);
+
+        if (!metafield) {
+          console.log("Metafield definition not found — creating...");
+          await createEUDMetafieldDefinition(admin);
+          metafield = await getMetafield(admin);
+        }
+
+        console.log("Metafield definition:", metafield);
       }
       catch (error) {
         if ("graphQLErrors" in error) {
