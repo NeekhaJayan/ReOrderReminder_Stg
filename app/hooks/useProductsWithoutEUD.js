@@ -4,11 +4,12 @@ import {groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
 export function useProductsWithoutEUD(fetcher) {
-    const {shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
+    const {productsWithoutMetafield,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
     const {products, setProducts } = useProducts();
-    const productsWithoutMetafield = products.filter(
-  p => p.variants.some(v => !v.reorder_days)
-);
+    console.log("products _withoutEUD:",products)
+//     const productsWithoutMetafield = products.filter(
+//   p => p.variants.some(v => !v.reorder_days)
+// );
     const [taggedWith, setTaggedWith] = useState('VIP');
     const [queryValue, setQueryValue] = useState(undefined);
     const [formState, setformState] = useState({});

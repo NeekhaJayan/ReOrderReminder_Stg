@@ -5,11 +5,12 @@ import {getAllProducts,groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
 export function useProductsWithEUD(fetcher) {
-    const {shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
+    const {productsWithMetafield,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
     const {products, setProducts } = useProducts();
-    const productsWithMetafield = products.filter(
-  p => p.variants.every(v => v.reorder_days)
-);
+    console.log("products _withEUD:",products)
+//     const productsWithMetafield = products.filter(
+//   p => p.variants.every(v => v.reorder_days)
+// );
 
     const groupedConfigured = groupVariantsByProduct(productsWithMetafield);
     const normalizedAndFiltered = groupedConfigured.filter(product => 
