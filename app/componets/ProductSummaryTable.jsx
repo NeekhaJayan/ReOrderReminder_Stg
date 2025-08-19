@@ -34,12 +34,12 @@ export default function ProductSummaryTable({totalProductsCount,readyProductsCou
         </thead>
         <tbody>
           <tr>
-            <td rowSpan={2} style={{ border: "1px solid #dfe3e8", padding: "12px" }}>
+            <td rowSpan={2} style={{ border: "1px solid #dfe3e8", padding: "12px",width:"100px" }}>
               <Text variant="bodyLg">{totalProducts}</Text>
             </td>
 
             {/* Ready Column */}
-            <td style={{ border: "1px solid #dfe3e8", padding: "12px" }}>
+            <td style={{ border: "1px solid #dfe3e8", padding: "12px",width:"100px" }}>
               <BlockStack gap="200" align="center">
                 <Text variant="bodyMd">✔️ Ready</Text>
                 
@@ -47,7 +47,7 @@ export default function ProductSummaryTable({totalProductsCount,readyProductsCou
             </td>
 
             {/* Needs Setup Column */}
-            <td style={{ border: "1px solid #dfe3e8", padding: "12px" }}>
+            <td style={{ border: "1px solid #dfe3e8", padding: "12px",width:"100px" }}>
               <BlockStack gap="200" align="center">
                 <Text variant="bodyMd">❌ Needs Setup</Text>
               </BlockStack>
@@ -55,14 +55,14 @@ export default function ProductSummaryTable({totalProductsCount,readyProductsCou
           </tr>
           <tr>
             
-            <td style={{ border: "1px solid #dfe3e8", padding: "12px" }}>
+            <td style={{ border: "1px solid #dfe3e8", padding: "12px" ,width:"50px" }}>
                 <BlockStack gap="200" align="center">
                   <Link url="/app/myproducts?filter=ready">
                       <Text variant="bodyMd">{readyCount}</Text>
                   </Link>
             </BlockStack>
             </td>
-            <td style={{ border: "1px solid #dfe3e8", padding: "12px" }}>
+            <td style={{ border: "1px solid #dfe3e8", padding: "12px",width:"50px"  }}>
               <BlockStack gap="200" align="center">
               <Link url="/app/myproducts?filter=needsSetup">
                   <Text variant="bodyMd">{needsSetupCount}</Text>
@@ -71,14 +71,21 @@ export default function ProductSummaryTable({totalProductsCount,readyProductsCou
 
             </td>
             
-            
+          </tr>
+          <tr>
+            <td style={{ border: "1px solid #dfe3e8", padding: "12px",width:"50px"  }}>
+              <Text as="span" variant="bodySm">💡<b>Total Products</b> includes variants</Text>
+            </td>
+            <td style={{ border: "1px solid #dfe3e8" }}>
+              <Text as="span" variant="bodySm">
+            ✅<b>Ready</b> means <i>‘Days Product Lasts’</i> is set.</Text>
+            </td>
+            <td style={{ border: "1px solid #dfe3e8", padding: "12px"  }}></td>
           </tr>
         </tbody>
       </table>
 
-      <Text as="span" variant="bodySm">
-        ✅ <b>Ready</b> means <i>‘Days Product Lasts’</i> is set.
-      </Text>
+      
     </Card>
   );
 }

@@ -135,9 +135,9 @@ export default function Index() {
     <>
     {loading? (<SkeletonLoad/>):(
       
-    <Page>
+    <Page title="ReOrder Reminder Dashboard" >
       
-      <Card roundedAbove="sm" padding="400">
+      <Card roundedAbove="sm" padding="600">
       <div style={{paddingLeft:'3rem',paddingRight:'3rem',justifyContent:'center'}}>
       {showSettingsBanner && settingsWarningMessages.length > 0 && (
           <Banner
@@ -156,32 +156,6 @@ export default function Index() {
         )}
       </div>
       
-        <div style={{padding:'1rem 3rem',justifyContent:'center', marginTop:'2 rem'}}>
-        
-          <MediaCard
-            title={<Text
-              variant="headingLg"
-              as="span"
-              tone="subdued"
-              fontWeight="regular"
-              alignment="center"
-              padding="400"
-            >
-              Intelligent, Automated Reorder Reminders for Repeat Sales Growth!
-            </Text>}  
-          >
-            <img
-              alt=""
-              width="100%"
-              style={{
-                objectFit: 'cover',
-                objectPosition: 'center',
-                marginLeft:'0.5rem',
-              }}
-              src="../logo.png?width=1850"
-            />
-          </MediaCard>
-        </div>
         <div style={{paddingLeft:'3rem',paddingRight:'3rem',justifyContent:'center'}}>
         {showBanner && (
           <Banner tone="success" onDismiss={() => setShowBanner(false)}>
@@ -194,23 +168,23 @@ export default function Index() {
           </Banner>
         )}
         </div>
-        
+        <div style={{paddingLeft:'1rem',paddingRight:'1rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
         <BlockStack gap="400" >
          
             <div style={{ paddingLeft:'1rem',paddingRight:'1rem',textAlign:'center'}}>
               
                   <Box  style={{ display: "inline-block" }}>
                     <Image 
-                      src="../rrp-steps.jpg" 
+                      src="../rrp-banner.jpg" 
                       alt="Steps" 
-                      style={{ width: "80%", height: "80%" }} // set desired size
+                      style={{ width: "100%", height: "100%" }} // set desired size
                     />
                   </Box>
                <div style={{paddingTop:'0.5rem',paddingBottom:'0.5rem'}}>
                   <Button
-                    variant="primary"
+                    variant="secondary"
                     onClick={() => navigate("/app/myproducts")}
-                    style={{ color: "var(--p-color-text-critical-secondary)" }}
+                    tone="info"
                   >
                     Start Configure
                   </Button>
@@ -220,25 +194,7 @@ export default function Index() {
 
             </div>
             
-            <Card background="bg-surface-warning-active" style={{ marginTop:'0.5rem'}}>
-              
-              <Text variant="headingMd" as="h6" alignment="center">
-              How We Calculate Reminder Timing:
-              </Text>
-              <Text variant="headingSm" tone="subdued" as="h6" alignment="center">
-                We calculate the reminder date based on the following formula:
-              </Text>
-              <Text variant="headingSm" as="h6" alignment="center">
-              Order Fulfilled Date + (Ordered Quantity * Estimated Usage Days of the Product) - Buffer Time
-              </Text>
-
-              <Text variant="headingSm" tone="subdued" as="p" fontWeight="regular" alignment="center">
-           Reminders are triggered only after a <strong>fulfilled order</strong> for the configured product.
-            </Text>
-            <Text variant="headingSm"tone="subdued" fontWeight="regular" as="p" alignment="center">
-              Use a test/draft order and mark it fulfilled to simulate the flow.
-            </Text>
-            </Card>
+            
             <div style={{ alignSelf:'center' ,color:'gray'}}>Contact Us : ReOrderReminderPro@decagrowth.com</div>
              {plan === "PRO" &&(<div className="whatsapp-button">
           <a
@@ -252,7 +208,7 @@ export default function Index() {
         </div>   )}
                  
         </BlockStack>
-        
+        </div>
       </Card>
     </Page>)}
   
