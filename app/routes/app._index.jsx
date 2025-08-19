@@ -186,7 +186,7 @@ export default function Index() {
                     onClick={() => navigate("/app/myproducts")}
                     tone="info"
                   >
-                    Start Configure
+                    Set Up Automated Reorder Reminders
                   </Button>
                  </div>
                   <ProductSummaryTable totalProductsCount={totalProducts} readyProductsCount={readyCount} needsSetupProductsCount={needsSetupCount}/>
