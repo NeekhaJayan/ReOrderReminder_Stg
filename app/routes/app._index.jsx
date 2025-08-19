@@ -175,7 +175,7 @@ export default function Index() {
               
                   <Box  style={{ display: "inline-block" }}>
                     <Image 
-                      src="../rrp-banner (1).jpg" 
+                      src="../rrp-banner-new.jpg" 
                       alt="Steps" 
                       style={{ width: "100%", height: "100%" }} // set desired size
                     />
