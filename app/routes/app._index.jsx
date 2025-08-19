@@ -168,7 +168,7 @@ export default function Index() {
           </Banner>
         )}
         </div>
-        <div style={{paddingLeft:'1rem',paddingRight:'1rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
+        <div style={{paddingLeft:'1rem',paddingRight:'1rem',paddingTop:'3rem',paddingBottom:'1rem',justifyContent:'center'}}>
         <BlockStack gap="400" >
          
             <div style={{ paddingLeft:'1rem',paddingRight:'1rem',textAlign:'center'}}>

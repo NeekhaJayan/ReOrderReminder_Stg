@@ -194,9 +194,10 @@ export const getAllProducts = async (admin) => {
    }
   }
   // console.log(productsWithMetafield);
-  const totalProducts = productNodes.length ;
+  
   const readyCount = productsWithMetafield.length;
   const needsSetupCount = productsWithoutMetafield.length;
+  const totalProducts = readyCount + needsSetupCount;
   
   return {
     productsWithMetafield,

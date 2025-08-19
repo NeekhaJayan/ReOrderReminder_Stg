@@ -1,4 +1,5 @@
-import { Card, Text, Badge, Link, BlockStack } from "@shopify/polaris";
+import { Card, Text, Badge, Link, BlockStack ,Icon} from "@shopify/polaris";
+import { InfoIcon } from "@shopify/polaris-icons";
 
 export default function ProductSummaryTable({totalProductsCount,readyProductsCount,needsSetupProductsCount}) {
   const totalProducts = totalProductsCount;
@@ -7,10 +8,7 @@ export default function ProductSummaryTable({totalProductsCount,readyProductsCou
 
   return (
     <Card style={{paddingLeft:'2rem',paddingRight:'2rem'}}>
-      <Text variant="headingMd" as="h2" alignment="center">
-        Product Setup Summary
-      </Text>
-
+      
       <table
         style={{
           width: "100%",
@@ -74,11 +72,18 @@ export default function ProductSummaryTable({totalProductsCount,readyProductsCou
           </tr>
           <tr>
             <td style={{ border: "1px solid #dfe3e8", padding: "12px",width:"50px"  }}>
-              <Text as="span" variant="bodySm">💡<b>Total Products</b> includes variants</Text>
+              <div style={{ display: "flex", alignItems: "center"}}>
+                <span style={{ marginRight: "2px", display: "flex", alignItems: "center" }}>
+    <Icon source={InfoIcon} tone="info" size="small" />
+  </span>
+                <Text as="span" variant="bodySm">
+                  <b>Total Products</b> includes variants
+                </Text>
+              </div>
             </td>
             <td style={{ border: "1px solid #dfe3e8" }}>
               <Text as="span" variant="bodySm">
-            ✅<b>Ready</b> means <i>‘Days Product Lasts’</i> is set.</Text>
+            ✅ <b>Ready</b> means <i>'Days Product Lasts'</i> is set.</Text>
             </td>
             <td style={{ border: "1px solid #dfe3e8", padding: "12px"  }}></td>
           </tr>
