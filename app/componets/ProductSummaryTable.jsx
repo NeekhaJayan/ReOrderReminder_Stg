@@ -7,7 +7,7 @@ export default function ProductSummaryTable({totalProductsCount,readyProductsCou
   const needsSetupCount = needsSetupProductsCount;
 
   return (
-    <Card style={{paddingLeft:'2rem',paddingRight:'2rem'}}>
+    <Card style={{padding:'1rem'}}>
       
       <table
         style={{

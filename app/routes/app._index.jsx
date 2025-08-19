@@ -8,7 +8,7 @@ import {
   Button,
   BlockStack,
   MediaCard,
-  TextContainer,Banner,Box,Image
+  TextContainer,Banner,Box,Image,FooterHelp
 } from "@shopify/polaris";
 
 import { authenticate } from "../shopify.server";
@@ -135,10 +135,10 @@ export default function Index() {
     <>
     {loading? (<SkeletonLoad/>):(
       
-    <Page title="ReOrder Reminder Dashboard" >
+    <Page  >
       
-      <Card roundedAbove="sm" padding="600">
-      <div style={{paddingLeft:'3rem',paddingRight:'3rem',justifyContent:'center'}}>
+      <Card background="bg-surface-brand" roundedAbove="sm" padding="300">
+      <div style={{paddingLeft:'1rem',paddingRight:'1rem',justifyContent:'center'}}>
       {showSettingsBanner && settingsWarningMessages.length > 0 && (
           <Banner
             tone="critical"
@@ -168,19 +168,19 @@ export default function Index() {
           </Banner>
         )}
         </div>
-        <div style={{paddingLeft:'1rem',paddingRight:'1rem',paddingTop:'3rem',paddingBottom:'1rem',justifyContent:'center'}}>
+        <div style={{paddingLeft:'1rem',paddingRight:'1rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
         <BlockStack gap="400" >
          
-            <div style={{ paddingLeft:'1rem',paddingRight:'1rem',textAlign:'center'}}>
+            <div style={{ textAlign:'center'}}>
               
                   <Box  style={{ display: "inline-block" }}>
                     <Image 
-                      src="../rrp-banner(1).jpg" 
+                      src="../rrp-banner (1).jpg" 
                       alt="Steps" 
                       style={{ width: "100%", height: "100%" }} // set desired size
                     />
                   </Box>
-               <div style={{paddingTop:'0.5rem',paddingBottom:'0.5rem'}}>
+               <div style={{paddingTop:'1rem',paddingBottom:'1rem'}}>
                   <Button
                     variant="secondary"
                     onClick={() => navigate("/app/myproducts")}
@@ -195,7 +195,7 @@ export default function Index() {
             </div>
             
             
-            <div style={{ alignSelf:'center' ,color:'gray'}}>Contact Us : ReOrderReminderPro@decagrowth.com</div>
+            
              {plan === "PRO" &&(<div className="whatsapp-button">
           <a
             href="https://wa.me/6282086660?text=Hello!%20I'm%20interested%20in%20your%20services"
@@ -210,6 +210,12 @@ export default function Index() {
         </BlockStack>
         </div>
       </Card>
+      <FooterHelp align="center">
+        <Text as="span" tone="subdued">
+          Contact Us : ReOrderReminderPro@decagrowth.com
+        </Text>
+      </FooterHelp>
+      
     </Page>)}
   
   </>
