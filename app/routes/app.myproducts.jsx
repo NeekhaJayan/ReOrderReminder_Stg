@@ -114,18 +114,19 @@ export default function MyProducts() {
   const {banner, loading} = useProductsWithoutEUD(fetcher);
  
  return(
-      
+      <div style={{paddingLeft:'3rem',paddingRight:'3rem',justifyContent:'center'}}>
       <LegacyCard>
-        
-
-      <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
         {selectedTab === 0 ? (
           <>
             {banner?.success && <BannerComponent title={banner.success} tone="success" />}
             {banner?.error && <BannerComponent title={banner.error} tone="critical" />}
 
             {loading && <div className="header-spinner">Saving...</div>}
-            <ProductTableInput fetcher={fetcher} />
+            
+              <ProductTableInput fetcher={fetcher} />
+            
+            
           </>  
         ) : (
           <>
@@ -157,6 +158,7 @@ export default function MyProducts() {
         )}
       </Tabs>
       </LegacyCard>
+      </div>
  )
 }
 

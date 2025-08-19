@@ -78,6 +78,7 @@ export function ProductTableInput({ fetcher }) {
           {variants.length === 1 && (
             <>
               <IndexTable.Cell>
+                <div style={{ maxWidth: "100px", margin: "0 auto",alignItems:"center" }}>
                 <TextField
                   labelHidden
                   type="number"
@@ -85,7 +86,8 @@ export function ProductTableInput({ fetcher }) {
                   onChange={handleChange(variants[0].shopify_variant_id)}
                   placeholder="Estimated Usage Days"
                   autoComplete="off"
-                />
+                  
+                /></div>
               </IndexTable.Cell>
               <IndexTable.Cell>
                 <Button
@@ -127,6 +129,7 @@ export function ProductTableInput({ fetcher }) {
                 </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
+                <div style={{ maxWidth: "100px", margin: "0 auto" ,alignItems:"center"}}>
                 <TextField
                   labelHidden
                   type="number"
@@ -134,7 +137,7 @@ export function ProductTableInput({ fetcher }) {
                   onChange={handleChange(variant.shopify_variant_id)}
                   placeholder="Estimated Usage Days"
                   autoComplete="off"
-                />
+                /></div>
               </IndexTable.Cell>
               <IndexTable.Cell>
                 <Button

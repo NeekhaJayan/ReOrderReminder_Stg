@@ -1,9 +1,10 @@
 import {IndexTable,Spinner,Text} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
 import SkeletonLoad from "../componets/SkeletonLoad";
+import { useProductsWithEUD } from "../hooks/useProductsWithEUD";
 
-const ProductTable = ({ productData,minimalView,spinner,reorderState, editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,selectedProductData,activeEditModal,toggleEditModal,activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,editWarningMessages,emailStatus}) => {
-    
+const ProductTable = ({ fetcher,minimalView,spinner,reorderState, editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,selectedproductsWithEUD,activeEditModal,toggleEditModal,activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,editWarningMessages,emailStatus}) => {
+      const {productsWithEUD} = useProductsWithEUD(fetcher);
     return(
         <>
             
@@ -12,7 +13,7 @@ const ProductTable = ({ productData,minimalView,spinner,reorderState, editingPro
                     singular: "Product",
                     plural: "Products",
                 }}
-                itemCount={productData.length}
+                itemCount={productsWithEUD.length}
                 headings={[
                     { title: "Product Image" },
                     { title: "Product Name" },
@@ -33,7 +34,7 @@ const ProductTable = ({ productData,minimalView,spinner,reorderState, editingPro
                 ]}
                 selectable={false}
                 >
-                {productData.map((productGroup, index) => (
+                {productsWithEUD.map((productGroup, index) => (
                     <ProductTableRow
                     key={index}
                     product={productGroup}
@@ -52,7 +53,7 @@ const ProductTable = ({ productData,minimalView,spinner,reorderState, editingPro
                     confirmReset={confirmReset}
                     selectedProductId={selected_productId}
                     selectedVariantId={selected_variantId}
-                    selectedProductData={selectedProductData}
+                    selectedproductsWithEUD={selectedproductsWithEUD}
                     activeEmailModal={activeEmailModal} 
                     toggleEmailModal={toggleEmailModal} 
                     scheduleEmailCount={scheduleEmailCount} 

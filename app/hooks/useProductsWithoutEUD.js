@@ -104,8 +104,6 @@ export function useProductsWithoutEUD(fetcher) {
         }))
       );
     
-
-
     return {groupedPending,headings,resourceName,formState,handleChange,handleSave,filteredItems,allVariantRows,fetcher,
     banner,
     loading: fetcher?.state !== "idle"}

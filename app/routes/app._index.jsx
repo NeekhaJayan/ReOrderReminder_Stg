@@ -8,20 +8,20 @@ import {
   Button,
   BlockStack,
   MediaCard,
-  TextContainer,Banner
+  TextContainer,Banner,Box,Image
 } from "@shopify/polaris";
 
 import { authenticate } from "../shopify.server";
 import { useNavigate } from "@remix-run/react";
-import ProductTable  from "../componets/ProductTable";
-import ProductForm from "../componets/ProductForm";
-import EmptyProductState from "../componets/EmptyProductState";
+import { useFetcher,useActionData,useLoaderData } from "@remix-run/react";
 import SkeletonLoad from "../componets/SkeletonLoad";
+import ProductSummaryTable from "../componets/ProductSummaryTable";
 import { useAppData } from "../hooks/useAppData";
 import { shopInstance } from "../services/api/ShopService";
 import { productInstance } from "../services/api/ProductService";
+import {getAllProducts} from '../utils/shopify';
 import { APP_SETTINGS } from "../constants";
-import {getMetafieldForProduct,updateProductVariantMetafield} from '../utils/shopify';
+
 import '../styles/index.css';
 
 
@@ -48,9 +48,9 @@ export const loader = async ({ request }) => {
       if (!shop || !shop.shop_id) {
         throw new Error("Shop creation failed or missing shop_id");
       }
-      
       const reorderDetails = await productInstance.getAllProductDetails(shop.shop_id);
-      return json({ reorderDetails: reorderDetails,shopID:shop.shop_id,bufferTime:shop.buffer_time,templateId:shop.template_id ,logo:shop.logo,coupon:shop.coupon,discount:shop.discount}); 
+      const productData = await getAllProducts(admin);
+      return json({ reorderDetails: reorderDetails,totalProducts:productData.totalProducts,readyCount:productData.readyCount,needsSetupCount:productData.needsSetupCount,shopID:shop.shop_id,bufferTime:shop.buffer_time,templateId:shop.template_id ,logo:shop.logo,coupon:shop.coupon,discount:shop.discount}); 
       } catch (error) {
         console.error("Loader error:", error);
         throw new Error("Loader error:", error.message || error);
@@ -115,6 +115,7 @@ export const action = async ({ request }) => {
 
 
 export default function Index() {
+  const {totalProducts,readyCount,needsSetupCount}=useLoaderData();
   const {fetcher,shopID,templateId,
     formState,
     formProductState,
@@ -195,49 +196,28 @@ export default function Index() {
         </div>
         
         <BlockStack gap="400" >
-          <div style={{paddingLeft:'5rem',paddingRight:'5rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
-            <ProductForm 
-            disabled={plan === "FREE" && updatedProducts.length >= APP_SETTINGS.FREE_PRODUCT_LIMIT}
-            bannerMessage={bannerMessage}
-            bannerStatus={bannerStatus}
-            setBannerMessage={setBannerMessage}
-            handleChange={handleChange}
-            handleSubmit={handleSubmit}
-            formState={formState}
-            formProductState={formProductState}
-            selectProduct={selectProduct} 
-            plan={plan} 
-            updatedProducts={updatedProducts}
-            fetcher={fetcher}
-            shopID={shopID}
-            templateId={templateId}/>
-            {state === "submitting" && <p>Submitting...</p>}
-            {data?.error && <p style={{ color: "red" }}>Error: {data.error}</p>}
-            {data?.success && <p style={{ color: "darkgreen" }}>
-    {data.success} <br />Reorder reminders will be automatically sent for this product
-    after a fulfilled order is received, based on your settings.
-  </p>}
-          </div>
          
-            
-            <div style={{ marginLeft:'5rem',marginRight:'5rem'}}>
-              <Card padding="0" >
-              {updatedProducts.filter(p => p.isNew).length === 0 ? ("") : (
-                
-                <ProductTable
-                  productData={updatedProducts.filter(p => p.isNew)}
-                  minimalView={true}
-                 
-                />
-              )}
+            <div style={{ paddingLeft:'1rem',paddingRight:'1rem',textAlign:'center'}}>
               
-              </Card>
-              <Button
-                  variant="plain"
-                  onClick={() => navigate("/app/myproducts")}
-                >
-                  View all configured products →
-                </Button>
+                  <Box  style={{ display: "inline-block" }}>
+                    <Image 
+                      src="../rrp-steps.jpg" 
+                      alt="Steps" 
+                      style={{ width: "80%", height: "80%" }} // set desired size
+                    />
+                  </Box>
+               <div style={{paddingTop:'0.5rem',paddingBottom:'0.5rem'}}>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate("/app/myproducts")}
+                    style={{ color: "var(--p-color-text-critical-secondary)" }}
+                  >
+                    Start Configure
+                  </Button>
+                 </div>
+                  <ProductSummaryTable totalProductsCount={totalProducts} readyProductsCount={readyCount} needsSetupProductsCount={needsSetupCount}/>
+
+
             </div>
             
             <Card background="bg-surface-warning-active" style={{ marginTop:'0.5rem'}}>

@@ -107,7 +107,7 @@ export const deleteEUDMetafieldDefinition = async (admin, definitionId) => {
 export const getAllProducts = async (admin) => {
   const productsWithMetafield = [];
   const productsWithoutMetafield = [];
-
+  
   const response = await admin.graphql(
     `#graphql
     query {
@@ -194,9 +194,13 @@ export const getAllProducts = async (admin) => {
    }
   }
   // console.log(productsWithMetafield);
+  const totalProducts = productNodes.length ;
+  const readyCount = productsWithMetafield.length;
+  const needsSetupCount = productsWithoutMetafield.length;
+  
   return {
     productsWithMetafield,
-    productsWithoutMetafield,
+    productsWithoutMetafield,totalProducts,readyCount,needsSetupCount
   };
 };
 
