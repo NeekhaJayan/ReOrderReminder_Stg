@@ -1,14 +1,20 @@
 import { useState, useEffect, useCallback,useLayoutEffect } from "react";
-import { useFetcher, useLoaderData ,useSearchParams} from "@remix-run/react";
+import { useFetcher,useSearchParams} from "@remix-run/react";
+import { useProducts } from "../componets/ProductContext";
 import { useOutletContext } from '@remix-run/react';
 import {getAllProducts} from '../utils/shopify';
 
 export function useAppData() {
-    const {reorderDetails,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
-    const { plan } = useOutletContext();
+    
+    const { plan,shopID,bufferTime,templateId,logo,coupon,discount } = useOutletContext();
+    const { products } = useProducts();
+    const totalProducts = products.totalProducts;
+    const readyCount = products.readyCount;
+    const needsSetupCount = products.needsSetupCount;
+    console.log(products);
     const fetcher = useFetcher();
     const [formState, setformState] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [spinner,setSpinner]=useState(false);
     const [bannerMessage, setBannerMessage] = useState(""); // Store banner message
     const [bannerStatus, setBannerStatus] = useState("");
@@ -16,6 +22,7 @@ export function useAppData() {
     const rawMessage = searchParams.get("message");
     const message = rawMessage ? decodeURIComponent(rawMessage) : null;
     const [showBanner, setShowBanner] = useState(!!message);
+
     
     const completedSettings = {
         logoUploaded: Boolean(logo),
@@ -63,7 +70,7 @@ export function useAppData() {
     const { data, state } = fetcher;
     const [editingProduct, setEditingProduct] = useState(null); // Track the product being edited
     const [resetProduct,setResetProduct]=useState(null);
-    const [updatedProducts, setUpdatedProducts] = useState(reorderDetails);
+    const [updatedProducts, setUpdatedProducts] = useState();
 
     useEffect(() => {
         const filteredMessages = filterMessages();
@@ -122,12 +129,12 @@ export function useAppData() {
             );
 
     };
-    const [selectedProductIds, setSelectedProductIds] = useState(
-        reorderDetails.map(product => ({
-        productId: product.shopify_product_id,
-        variantIds: [product.shopify_variant_id],  // Assuming selected_variant_id is available in reorderDetails
-        }))
-    );  // Track selected products
+    // const [selectedProductIds, setSelectedProductIds] = useState(
+    //     reorderDetails.map(product => ({
+    //     productId: product.shopify_product_id,
+    //     variantIds: [product.shopify_variant_id],  // Assuming selected_variant_id is available in reorderDetails
+    //     }))
+    // );  // Track selected products
    
   
 
@@ -392,12 +399,12 @@ export function useAppData() {
         
     }
     
-    useEffect(() => {
-        // Simulate loading when index page loads
-        if (reorderDetails) {
-        setLoading(false);
-        }
-    }, [reorderDetails]);
+    // useEffect(() => {
+    //     // Simulate loading when index page loads
+    //     if (reorderDetails) {
+    //     setLoading(false);
+    //     }
+    // }, [reorderDetails]);
     useEffect(() => {
         if (fetcher.state === "idle") {
         setSpinner(false); // Stop loading when fetcher is idle
@@ -447,6 +454,10 @@ export function useAppData() {
     
     return {
         fetcher,
+        products,
+        totalProducts,
+    readyCount,
+    needsSetupCount,
         shopID,
         templateId,
         bufferTime,

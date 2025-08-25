@@ -10,52 +10,14 @@ import {
   MediaCard,
   TextContainer,Banner,Box,Image,FooterHelp
 } from "@shopify/polaris";
-
-import { authenticate } from "../shopify.server";
 import { useNavigate } from "@remix-run/react";
-import { useFetcher,useActionData,useLoaderData } from "@remix-run/react";
 import SkeletonLoad from "../componets/SkeletonLoad";
 import ProductSummaryTable from "../componets/ProductSummaryTable";
 import { useAppData } from "../hooks/useAppData";
 import { shopInstance } from "../services/api/ShopService";
 import { productInstance } from "../services/api/ProductService";
-import {getAllProducts} from '../utils/shopify';
-import { APP_SETTINGS } from "../constants";
-
 import '../styles/index.css';
 
-
-export const loader = async ({ request }) => {
-  try{
-      const {admin,session }=await authenticate.admin(request);
-      // console.log(admin);
-      console.log(session);
-      const shopDetail=await shopInstance.getShopifyShopDetails(admin);
-      // console.log("Fetching metafield...");
-      // await updateProductVariantMetafield(admin)
-      // const variantdata=await getMetafieldForProduct(admin);
-      // console.log("Variant Data:", variantdata.data.productVariant.linerMaterial.value);
-      console.log(shopDetail)
-      const shop_payload_details={
-        shopify_domain: shopDetail.myshopifyDomain,
-        shop_name:shopDetail.name,
-        email:shopDetail.email,
-        host:shopDetail.primaryDomain.host,
-        accessToken:session.accessToken
-      }
-      console.log(shop_payload_details)  
-      let shop = await shopInstance.createShop(shop_payload_details);
-      if (!shop || !shop.shop_id) {
-        throw new Error("Shop creation failed or missing shop_id");
-      }
-      const reorderDetails = await productInstance.getAllProductDetails(shop.shop_id);
-      const productData = await getAllProducts(admin);
-      return json({ reorderDetails: reorderDetails,totalProducts:productData.totalProducts,readyCount:productData.readyCount,needsSetupCount:productData.needsSetupCount,shopID:shop.shop_id,bufferTime:shop.buffer_time,templateId:shop.template_id ,logo:shop.logo,coupon:shop.coupon,discount:shop.discount}); 
-      } catch (error) {
-        console.error("Loader error:", error);
-        throw new Error("Loader error:", error.message || error);
-      }
-};
 
 export const action = async ({ request }) => {
 
@@ -115,18 +77,11 @@ export const action = async ({ request }) => {
 
 
 export default function Index() {
-  const {totalProducts,readyCount,needsSetupCount}=useLoaderData();
-  const {fetcher,shopID,templateId,
-    formState,
-    formProductState,
-    loading,
-    updatedProducts,
-    bannerMessage,
-    bannerStatus,
-    setBannerMessage,
-    selectProduct,
-    handleChange,handleSubmit,plan,showBanner,message,setShowBanner,showSettingsBanner,setShowSettingsBanner,settingsWarningMessages}=useAppData();
-    const { data, state } = fetcher;
+  
+  const {fetcher,totalProducts,plan,
+    readyCount,
+    needsSetupCount,loading,showBanner,message,setShowBanner,showSettingsBanner,setShowSettingsBanner,settingsWarningMessages}=useAppData();
+  const { data, state } = fetcher;
 
     const navigate =useNavigate();
 
@@ -137,7 +92,7 @@ export default function Index() {
       
     <Page  >
       
-      <Card background="bg-surface-brand" roundedAbove="sm" padding="300">
+      <Card background="bg-surface-brand" roundedAbove="sm" >
       <div style={{paddingLeft:'1rem',paddingRight:'1rem',justifyContent:'center'}}>
       {showSettingsBanner && settingsWarningMessages.length > 0 && (
           <Banner
@@ -168,14 +123,14 @@ export default function Index() {
           </Banner>
         )}
         </div>
-        <div style={{paddingLeft:'1rem',paddingRight:'1rem',paddingTop:'1rem',paddingBottom:'1rem',justifyContent:'center'}}>
+        <div style={{justifyContent:'center'}}>
         <BlockStack gap="400" >
          
             <div style={{ textAlign:'center'}}>
               
                   <Box  style={{ display: "inline-block" }}>
                     <Image 
-                      src="../rrp-banner-new.jpg" 
+                      src="../rrp-banner-new (1).jpg" 
                       alt="Steps" 
                       style={{ width: "100%", height: "100%" }} // set desired size
                     />

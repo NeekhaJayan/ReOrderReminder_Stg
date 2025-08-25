@@ -1,9 +1,10 @@
-import {IndexTable,ButtonGroup,Button,Modal,TextField,Thumbnail,Badge,Icon,Collapsible,TextContainer,Link,LegacyCard,
+import {IndexTable,ButtonGroup,Button,Modal,TextField,Thumbnail,Badge,Icon,Tooltip,Collapsible,TextContainer,Link,LegacyCard,
   LegacyStack} from "@shopify/polaris";
 import { useState,useCallback} from "react";
 import { useNavigate } from "@remix-run/react";
 import {InlineErrorComponent} from "../componets/InlineErrorComponent";
 import { ChevronDownIcon, ChevronUpIcon } from "@shopify/polaris-icons";
+import {EmailFollowUpIcon} from '@shopify/polaris-icons';
 // import { useAppData } from "../hooks/useAppData";
 const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSave,onCancel, onReorderChange,activeModal,toggleModal,confirmReset,selectedProductId,selectedVariantId,editWarningMessages,minimalView}) => {
   const navigate =useNavigate();
@@ -19,7 +20,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
         {variants.filter(variant => variant && variant.shopify_variant_id).map((variant, idx) => {
         if (!variant?.shopify_variant_id) return null; 
         const isThisEditing = isEditing === variant.shopify_variant_id;
-        const imageSrc = productImage?.originalSrc || "../product-place-holder.png";
+        const imageSrc = productImage ||"../product-place-holder.png";
         return (
         <IndexTable.Row id={variant.shopify_variant_id} position={variant.shopify_variant_id} key={variant.shopify_variant_id}>
               <IndexTable.Cell>{product.isNew && <Badge tone="attention">New</Badge>}
@@ -28,7 +29,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                 </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
-                <div style={{ whiteSpace: "normal", wordWrap: "break-word", maxWidth: "300px" }}>
+                <div style={{ whiteSpace: "normal", wordWrap: "break-word", maxWidth: "600px" }}>
                   <strong>{productTitle}</strong>
                   {variants.length > 1 && (
                     <div style={{ fontSize: "0.875rem", color: "#666" }}>
@@ -37,7 +38,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                   )}
                 </div>
             </IndexTable.Cell>
-              <IndexTable.Cell>
+              <IndexTable.Cell >
               {isThisEditing ? (
                 <>
                   <div style={{ width: "50px", alignItems: "center" }}>
@@ -54,7 +55,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                   )}
                 </>
               ) : (
-                variant.reorder_days || ""
+                <div style={{textAlign:"center" }}>{variant.reorder_days || ""}</div>
               )}
             </IndexTable.Cell>
               <IndexTable.Cell>
@@ -118,7 +119,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                 </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px",width:'200px' }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "5px",width:'200px' }}>
                       <LegacyStack vertical>
                         <Button
                           onClick={handleToggle}
@@ -143,7 +144,12 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                           </TextContainer>
                         </Collapsible>
                       </LegacyStack>
-                    
+                      <Tooltip content="Test Email Reminder">
+                        <Button variant="monochromePlain">
+                          <Icon source={EmailFollowUpIcon} tone="info" />
+                        </Button>
+                      </Tooltip>
+                     
                   </div>
               </IndexTable.Cell>
            

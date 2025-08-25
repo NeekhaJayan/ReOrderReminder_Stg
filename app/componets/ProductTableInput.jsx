@@ -8,91 +8,86 @@ import {
   Button,
   Avatar,
 } from "@shopify/polaris";
-import React, { useState, Fragment } from "react";
+import React, { Fragment, useMemo } from "react";
 import { useProductsWithoutEUD } from "../hooks/useProductsWithoutEUD";
 
 export function ProductTableInput({ fetcher }) {
-  const { formState,handleChange, handleSave, filteredItems ,headings,allVariantRows} = useProductsWithoutEUD(fetcher);
+  const { formState, handleChange, handleSave, groupedProducts,allVariantRows, headings } = useProductsWithoutEUD(fetcher);
   const { smDown } = useBreakpoints();
 
+  // Group variants by product to render the nested table structure
   
 
-  // Flatten all variants for IndexTable selection
-  
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState(allVariantRows);
 
-  const rowMarkup = filteredItems.map((product, productIndex) => {
+  const rowMarkup = groupedProducts.map((product, productIndex) => {
+    const { shopify_product_id, productTitle, productImage, variants } = product;
     const subheaderId = `product-${productIndex}`;
-    const { productTitle, productImage, variants, shopify_product_id } = product;
 
-    const someSelected = variants.some((v) =>
-      selectedResources.includes(v.id)
-    );
-    const allSelected = variants.every((v) =>
-      selectedResources.includes(v.id)
-    );
+    const someSelected = variants.some((v) => selectedResources.includes(v.shopify_variant_id));
+    const allSelected = variants.every((v) => selectedResources.includes(v.shopify_variant_id));
     let selected = false;
     if (allSelected) selected = true;
     else if (someSelected) selected = "indeterminate";
 
-    const selectableRows = allVariantRows.filter((row) => !row.disabled);
-    const childRowRange = [
-      selectableRows.findIndex((row) => row.id === variants[0].shopify_variant_id),
-      selectableRows.findIndex(
-        (row) => row.id === variants[variants.length - 1].id
-      ),
-    ];
+    const mainRowProps = {
+      key: subheaderId,
+      position: productIndex,
+    };
+
+    if (variants.length > 1) {
+      mainRowProps.rowType = "subheader";
+      mainRowProps.id = subheaderId;
+      mainRowProps.selected = selected;
+      const selectableRows = allVariantRows.filter((row) => !row.disabled);
+      mainRowProps.selectionRange = [
+        selectableRows.findIndex((row) => row.id === variants[0].shopify_variant_id),
+        selectableRows.findIndex((row) => row.id === variants[variants.length - 1].shopify_variant_id),
+      ];
+    } else {
+      mainRowProps.id = variants[0].shopify_variant_id;
+      mainRowProps.selected = selectedResources.includes(variants[0].shopify_variant_id);
+    }
 
     return (
       <Fragment key={subheaderId}>
-        {/* Subheader Row */}
-        <IndexTable.Row
-          rowType="subheader"
-          selectionRange={childRowRange}
-          id={subheaderId}
-          position={productIndex * (variants.length + 1)}
-          selected={selectedResources.includes(variants[0].shopify_variant_id)}
-        >
-          {/* Product Info */}
-          <IndexTable.Cell scope="colgroup" as="th" id={subheaderId}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <IndexTable.Row {...mainRowProps}>
+          <IndexTable.Cell scope="colgroup" as="th" id={mainRowProps.id}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px"}}>
               {productImage ? (
                 <Avatar
                   size="md"
-                  source={productImage?.originalSrc || "../product-place-holder.png"}
-                  alt={productImage.altText || productTitle}
+                  source={productImage || "../product-place-holder.png"}
+                  alt={productTitle}
                 />
               ) : (
                 <Avatar size="md" name={productTitle} />
               )}
-              <div style={{ paddingLeft: "2rem" , width:"400px",textWrap:"wrap"}}>
-              <Text variant="bodyMd" fontWeight="semibold" as="span">
-                {productTitle}
-              </Text>
+              <div style={{ paddingLeft: "2rem", width: "600px", textWrap: "wrap" }}>
+                <Text variant="bodyMd" fontWeight="semibold" as="span">
+                  {productTitle}
+                </Text>
               </div>
             </div>
           </IndexTable.Cell>
 
-          {/* If only one variant, show its fields in the header */}
           {variants.length === 1 && (
             <>
               <IndexTable.Cell>
-                <div style={{ maxWidth: "100px", margin: "0 auto",alignItems:"center" }}>
-                <TextField
-                  labelHidden
-                  type="number"
-                  value={formState[variants[0].shopify_variant_id] || ""}
-                  onChange={handleChange(variants[0].shopify_variant_id)}
-                  placeholder="Estimated Usage Days"
-                  autoComplete="off"
-                  
-                /></div>
+                <div style={{ width: "50px", margin: "0 auto", alignItems: "center" }}>
+                  <TextField
+                    labelHidden
+                    value={formState[variants[0].shopify_variant_id] || ""}
+                    onChange={handleChange(variants[0].shopify_variant_id)}
+                    autoComplete="off"
+                  />
+                </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
                 <Button
                   onClick={() =>
-                    handleSave(shopify_product_id, variants[0].shopify_variant_id,productTitle,productImage?.originalSrc || "../product-place-holder.png")
+                    handleSave(shopify_product_id, variants[0].shopify_variant_id, productTitle, productImage|| "../product-place-holder.png")
                   }
                 >
                   Save
@@ -101,7 +96,6 @@ export function ProductTableInput({ fetcher }) {
             </>
           )}
 
-          {/* If multiple variants, fill empty cells for alignment */}
           {variants.length > 1 && (
             <>
               <IndexTable.Cell />
@@ -110,39 +104,37 @@ export function ProductTableInput({ fetcher }) {
           )}
         </IndexTable.Row>
 
-        {/* Variant Rows (only if more than one variant) */}
         {variants.length > 1 &&
           variants.map((variant, variantIndex) => (
             <IndexTable.Row
               key={variant.shopify_variant_id}
               id={variant.shopify_variant_id}
               position={
-                productIndex * (variants.length + 1) + variantIndex + 1
+                productIndex * (variants.length) + variantIndex + 1
               }
               selected={selectedResources.includes(variant.shopify_variant_id)}
             >
               <IndexTable.Cell>
-                <div style={{ paddingLeft: "2rem" , width:"300px",textWrap:"wrap"}}>
+                <div style={{ paddingLeft: "2rem", width: "300px", textWrap: "wrap",textAlign: "center" }}>
                   <Text as="span">
                     {variant.displayName || variant.variantTitle}
                   </Text>
                 </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
-                <div style={{ maxWidth: "100px", margin: "0 auto" ,alignItems:"center"}}>
-                <TextField
-                  labelHidden
-                  type="number"
-                  value={formState[variant.shopify_variant_id] || ""}
-                  onChange={handleChange(variant.shopify_variant_id)}
-                  placeholder="Estimated Usage Days"
-                  autoComplete="off"
-                /></div>
+                <div style={{ width: "50px", margin: "0 auto", alignItems: "center" }}>
+                  <TextField
+                    labelHidden
+                    value={formState[variant.shopify_variant_id] || ""}
+                    onChange={handleChange(variant.shopify_variant_id)}
+                    autoComplete="off"
+                  />
+                </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
                 <Button
                   onClick={() =>
-                    handleSave(shopify_product_id, variant.shopify_variant_id,variant.displayName || variant.variantTitle,productImage?.originalSrc || "../product-place-holder.png")
+                    handleSave(shopify_product_id, variant.shopify_variant_id, variant.displayName || variant.variantTitle, productImage || "../product-place-holder.png")
                   }
                 >
                   Save

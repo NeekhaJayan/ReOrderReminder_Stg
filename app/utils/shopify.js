@@ -154,7 +154,7 @@ export const getAllProducts = async (admin) => {
 
   for (const productEdge of productNodes) {
     const product = productEdge.node;
-    const productImage = product.images.edges[0]?.node || null;
+    const productImage = product.images.edges[0]?.node.originalSrc || null;
     const variants = product.variants.edges.map((v) => v.node);
 
     for (const variant of variants) {
@@ -167,18 +167,6 @@ export const getAllProducts = async (admin) => {
       const variantData = {
         shopify_product_id: product.id,
         productTitle: product.title,
-    
-//     const response = await admin.graphql(
-//       `#graphql
-//       mutation metafieldDelete($input: MetafieldDeleteInput!) {
-//         metafieldDelete(input: $input) {
-//           deletedId
-//           userErrors {
-//             field
-//             message
-//           }
-//         }
-//       }`,
         shopify_variant_id: variant.id,
         variantTitle: variant.title,
         displayName: variant.displayName,
@@ -209,6 +197,7 @@ export const getAllProducts = async (admin) => {
 export const groupVariantsByProduct = (variantList) => {
   // console.log(variantList);
   const productMap = new Map();
+  const extractNumericId = (gid) => gid?.toString().split("/").pop();
 
   for (const variant of variantList) {
     const productId = variant.shopify_product_id;

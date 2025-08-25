@@ -62,8 +62,12 @@ class Product{
             const productId = formData.get("productId").replace("gid://shopify/Product/", "");
             const shopId = formData.get("shopId");
             const variantId = formData.get("productVariantId").replace("gid://shopify/ProductVariant/", "");
-            const reorder_days =  parseFloat(formData.get("reorder_days"));
-            console.log(reorder_days);
+            // const reorder_days =  parseFloat(formData.get("reorder_days"));
+            let reorder_days_raw = formData.get("reorder_days");
+            let reorder_days = null;
+            if (reorder_days_raw !== null && reorder_days_raw !== "") {
+            reorder_days = parseFloat(reorder_days_raw);
+            }
             
     
             if (!shopId || !productId || !variantId) {

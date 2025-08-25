@@ -1,63 +1,33 @@
 
 import { json } from "@remix-run/node";
-import {Tabs,LegacyCard} from "@shopify/polaris";
-import {useState} from 'react';
-import { useFetcher,useActionData,useLoaderData } from "@remix-run/react";
+import {Page,Tabs,Card} from "@shopify/polaris";
+import { useFetcher} from "@remix-run/react";
+import { useEffect } from "react";
 import { shopInstance } from "../services/api/ShopService";
 import { productInstance } from "../services/api/ProductService";
 import { authenticate } from "../shopify.server";
 import {BannerComponent} from "../componets/BannerComponent";
 import {ProductTableInput } from "../componets/ProductTableInput";
 import ProductTable  from "../componets/ProductTable";
+import { useProducts } from "../componets/ProductContext";
 import { useProductsWithEUD } from "../hooks/useProductsWithEUD";
 import { useProductsWithoutEUD } from "../hooks/useProductsWithoutEUD";
-import {getAllProducts,updateProductVariantMetafield} from '../utils/shopify';
+import {updateProductVariantMetafield} from '../utils/shopify';
 
 
-export const loader = async ({ request }) => {
-  try {
-    const { session,admin } = await authenticate.admin(request);
-    const shop_domain = session.shop;
 
-    const shop = await shopInstance.getShopDetails(shop_domain);
-    if (!shop || !shop.shop_id) {
-      console.error("Shop not found");
-      throw new Response("Shop not found", { status: 404 }); // ✅ Throw here!
-    }
-    const productData = await getAllProducts(admin);
-    // console.log("Products with metafield:", productData.productsWithMetafield);
-    // console.log("Products without metafield:", productData.productsWithoutMetafield);
-    const productsWithoutMetafield=productData.productsWithoutMetafield;
-    const productsWithMetafield= productData.productsWithMetafield;
-    // const reorderDetails = await productInstance.getAllProductDetails(shop.shop_id);
-
-    return json({
-      productsWithoutMetafield,
-      productsWithMetafield,
-      shopID: shop.shop_id,
-      bufferTime: shop.buffer_time,
-      templateId: shop.template_id,
-      logo: shop.logo,
-      coupon: shop.coupon,
-      discount: shop.discountpercent, // 🔁 typo fixed (was shop.discount)
-    });
-  } catch (error) {
-    console.error("Loader error in /app/products:", error);
-    throw new Response("Failed to load product data", { status: 500 }); // ✅ Throw here!
-  }
-};
 
 export const action = async ({ request }) => {
-    console.log("Action hit");
     const {admin } = await authenticate.admin(request);
     const formData = await request.formData();
     const reorderdays = Number(formData.get("reorder_days")); 
     const method = request.method;
     const type = formData.get("type");
     const templateId = formData.get("templateId");
-    console.log("UsageDays:",reorderdays);
     let result;
     let metafield='';
+    let normalizedResult;
+    let baseResult;
     try{ 
         if (method === "PATCH") {
           
@@ -67,19 +37,48 @@ export const action = async ({ request }) => {
           else{
            
             result = await productInstance.updateProductData(formData);
+            console.log("result",result);
             metafield = await updateProductVariantMetafield(admin, formData);
+            baseResult = Array.isArray(result) ? result[0] : result;
+            if (!baseResult) {
+              baseResult = {
+                shopify_product_id: formData.get("productId").replace("gid://shopify/Product/", ""),
+                shopify_variant_id: formData.get("productVariantId").replace("gid://shopify/ProductVariant/", ""),
+                productTitle: formData.get("productTitle"),
+                productImage: formData.get("productImage"),
+                reorder_days: null,
+              };
+            }
+            normalizedResult = {
+                  ...baseResult,
+                  shopify_variant_id: `gid://shopify/ProductVariant/${baseResult.shopify_variant_id}`,
+                  reorder_days: { value: String(baseResult.reorder_days) }
+                };
             if (type === 'product_update') {
-              return json({ success: "Estimated Usage Days updated successfully!", result });
+              return json({
+                success: "Estimated Usage Days updated successfully!",
+                result: normalizedResult});
+
             } else if (type === 'product_reset') {
-              return json({ success: "Estimated Usage Days removed. Product moved to Needs Setup.", result });
+              return json({
+                success: "Estimated Usage Days Removed successfully!",
+                result: normalizedResult});
+
             }
           }
         }
         else{
               result = await productInstance.saveProductData(formData);
               metafield=await updateProductVariantMetafield(admin,formData);
-              console.log("metafield",metafield);
-              return json({success:"Estimated Usage Days saved successfully!",result});
+              baseResult = Array.isArray(result) ? result[0] : result;
+              normalizedResult = {
+                  ...baseResult,
+                  shopify_variant_id: `gid://shopify/ProductVariant/${baseResult.shopify_variant_id}`,
+                  reorder_days: { value: String(baseResult.reorder_days) }
+                };
+              console.log("metafield", normalizedResult);
+
+              return json({success:"Estimated Usage Days saved successfully!",result:normalizedResult} );
             }
         
        }
@@ -90,7 +89,37 @@ export const action = async ({ request }) => {
 };
 
 export default function MyProducts() {
-  const fetcher = useFetcher(); 
+  const fetcher = useFetcher();
+  const { setProducts } = useProducts(); 
+  useEffect(() => {
+    if (fetcher?.data?.result) {
+      const updatedVariant = fetcher.data.result;
+
+      setProducts(prev => {
+        const without = prev.productsWithoutMetafield.filter(
+          v => v.shopify_variant_id !== updatedVariant.shopify_variant_id
+        );
+        const withEUD = prev.productsWithMetafield.filter(
+          v => v.shopify_variant_id !== updatedVariant.shopify_variant_id
+        );
+
+        if (updatedVariant.reorder_days?.value && Number(updatedVariant.reorder_days.value) > 0) {
+          withEUD.push(updatedVariant);
+        } else {
+          without.push(updatedVariant);
+        }
+
+        return {
+          ...prev,
+          productsWithMetafield: withEUD,
+          productsWithoutMetafield: without,
+          readyCount: withEUD.length,
+          needsSetupCount: without.length,
+          totalProducts: withEUD.length + without.length,
+        };
+      });
+    }
+  }, [fetcher?.data, setProducts]);
   const {
     tabs,selectedTab,setSelectedTab,
     productsWithEUD,
@@ -114,9 +143,9 @@ export default function MyProducts() {
   const {banner, loading} = useProductsWithoutEUD(fetcher);
  
  return(
-      <div style={{paddingLeft:'3rem',paddingRight:'3rem',justifyContent:'center'}}>
-      <LegacyCard>
-        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+      <Page  >
+      <Card>
+        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab} fitted style={{borderBlockColor:"Highlight"}}>
         {selectedTab === 0 ? (
           <>
             {banner?.success && <BannerComponent title={banner.success} tone="success" />}
@@ -135,7 +164,7 @@ export default function MyProducts() {
 
             {loadingWithEUD && <div className="header-spinner">Saving...</div>}
             <ProductTable
-                      productData={productsWithEUD}
+                      productsWithEUD={productsWithEUD}
                       fetcher={fetcher}
                       minimalView={false}
                       spinner={spinner}
@@ -156,9 +185,9 @@ export default function MyProducts() {
           </>
           
         )}
-      </Tabs>
-      </LegacyCard>
-      </div>
+        </Tabs>
+      </Card>
+      </Page>
  )
 }
 

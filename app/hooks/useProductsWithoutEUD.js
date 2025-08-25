@@ -1,15 +1,11 @@
-import { useEffect,useState,useCallback } from "react";
-import { useFetcher, useLoaderData } from "@remix-run/react";
+import { useEffect,useState,useCallback,useMemo } from "react";
+import { useOutletContext } from '@remix-run/react';
 import {groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
 export function useProductsWithoutEUD(fetcher) {
-    const {productsWithoutMetafield,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
+    const { plan,shopID,bufferTime,templateId,logo,coupon,discount } = useOutletContext();
     const {products, setProducts } = useProducts();
-    console.log("products _withoutEUD:",products)
-//     const productsWithoutMetafield = products.filter(
-//   p => p.variants.some(v => !v.reorder_days)
-// );
     const [taggedWith, setTaggedWith] = useState('VIP');
     const [queryValue, setQueryValue] = useState(undefined);
     const [formState, setformState] = useState({});
@@ -20,64 +16,12 @@ export function useProductsWithoutEUD(fetcher) {
   };
 
   const headings = [
-    { title: "Product / Variant" },
-    { title: "Estimated Usage Days" },
-    { title: "Action" },
+    { title: "" },
+    { title: "Days Product Lasts" },
+    { title: "" },
   ];
 
-  useEffect(() => {
-    if (fetcher?.data?.success || fetcher?.data?.error) {
-      setBanner(fetcher.data);
-      const timer = setTimeout(() => setBanner(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [fetcher?.data]);
-
-  useEffect(() => {
-  if (fetcher?.data?.result) {
-    
-    setProducts(prev =>
-      prev.map(p =>
-        p.id === fetcher.data.result.shopify_product_id
-          ? {
-              ...p,
-              variants: p.variants.map(v =>
-                v.id === fetcher.data.result.shopify_variant_id
-                  ? { ...v, reorder_days: fetcher.data.result.reorder_days }
-                  : v
-              )
-            }
-          : p
-      )
-    );
-  }
-}, [fetcher?.data, setProducts]);
-    
-    const groupedPending = groupVariantsByProduct(productsWithoutMetafield);
-    
-    const handleChange = (variantId) => (value) => {
-      setformState((prev) => ({
-        ...prev,
-        [variantId]: value,
-      }));
-    };
-    
-    const handleSave = (productId, variantId,title,imageurl) => {
-
-      const days = formState[variantId];
-      const formData = new FormData();
-      formData.append("shopId",shopID)
-      formData.append("productId", productId);
-      formData.append("productVariantId", variantId);
-      formData.append("productImage",imageurl);
-      formData.append("productTitle",title);
-      formData.append("reorder_days", days);
-      console.log("JSUsageDays:",days)
-      fetcher.submit(formData, { method: "post", action: "/app/myproducts" });
-    };
-    
-    
-    const getFilteredItems = useCallback((items) => {
+  const getFilteredItems = useCallback((items) => {
         
         if (!queryValue || queryValue.trim() === '') {
             return items;
@@ -96,15 +40,66 @@ export function useProductsWithoutEUD(fetcher) {
         });
     }, [taggedWith, queryValue]);
 
-    const filteredItems = getFilteredItems(groupedPending);
-    const allVariantRows = filteredItems.flatMap((product) =>
-        product.variants.map((variant) => ({
-          id: variant.id,
-          disabled: false,
-        }))
-      );
+    const groupedProducts = useMemo(() => {
+      const grouped = groupVariantsByProduct(products.productsWithoutMetafield || []);
+      return getFilteredItems(grouped);
+    }, [products.productsWithoutMetafield, getFilteredItems]);
+
+    const allVariantRows = useMemo(() => {
+    return groupedProducts.flatMap((product) =>
+      product.variants.map((variant) => ({
+        ...variant,
+        productTitle: product.productTitle,
+        productImage: product.productImage,
+        shopify_product_id: product.shopify_product_id,
+        id: variant.shopify_variant_id,
+      }))
+    );
+  }, [groupedProducts]);
     
-    return {groupedPending,headings,resourceName,formState,handleChange,handleSave,filteredItems,allVariantRows,fetcher,
+ useEffect(() => {
+    if (fetcher?.data?.success || fetcher?.data?.error) {
+    setBanner(fetcher.data);
+    console.log(fetcher.data)
+    const timer = setTimeout(() => setBanner(null), 3000);
+    // Cleanup the timer when the component unmounts or the effect re-runs
+    return () => clearTimeout(timer);
+  }
+  }, [fetcher?.data]);
+
+
+ // Keep both dependencies
+    
+    
+    const handleChange = (variantId) => (value) => {
+      setformState((prev) => ({
+        ...prev,
+        [variantId]: value,
+      }));
+    };
+    
+    const handleSave = (productId, variantId,title,imageurl) => {
+
+      const days = formState[variantId];
+      const formData = new FormData();
+      formData.append("shopId",shopID)
+      formData.append("productId", productId);
+      formData.append("productVariantId", variantId);
+      formData.append("productImage",imageurl);
+      formData.append("productTitle",title);
+      formData.append("reorder_days", days);
+      fetcher.submit(formData, { method: "post", action: "/app/myproducts" });
+      setformState(prev => {
+        const copy = { ...prev };
+        delete copy[variantId];
+        return copy;
+      });
+  };
+    
+    
+    
+    
+    return {groupedProducts,allVariantRows,headings,resourceName,formState,handleChange,handleSave,fetcher,
     banner,
     loading: fetcher?.state !== "idle"}
 }

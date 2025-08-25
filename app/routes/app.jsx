@@ -7,42 +7,75 @@ import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { authenticate ,MONTHLY_PLAN} from "../shopify.server";
 import { ProductProvider } from "../componets/ProductContext";
+import { shopInstance } from "../services/api/ShopService";
+import {getAllProducts} from '../utils/shopify';
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }) => {
-  const {billing} = await authenticate.admin(request);
+  let shop = null;
+  let products = [];
+
   try {
-        
-        const billingCheck = await billing.require({
-          plans: [MONTHLY_PLAN],
-          isTest: true,
-          onFailure: () => {
-            throw new Error("No active Plan");
-          },
-        });
-    
-        const subscription = billingCheck.appSubscriptions[0];
-        const plan = subscription ? "PRO" : "FREE";
-        console.log(subscription.id)
-        return json({ apiKey: process.env.SHOPIFY_API_KEY || "" ,plan});
-        // return {plan};
-      } catch (error) {
-        if (error.message === "No active Plan") {
-          return json({ apiKey: process.env.SHOPIFY_API_KEY || "",plan:"FREE" });
-          // return {plan: "FREE"};
-        }
-        throw new Error("Unable to process the request. Please try again later.");
-      }
-  
+    const { billing, session, admin } = await authenticate.admin(request);
+
+    const shopDetail = await shopInstance.getShopifyShopDetails(admin);
+    const shop_payload_details = {
+      shopify_domain: shopDetail.myshopifyDomain,
+      shop_name: shopDetail.name,
+      email: shopDetail.email,
+      host: shopDetail.primaryDomain.host,
+      accessToken: session.accessToken,
+    };
+
+    shop = await shopInstance.createShop(shop_payload_details);
+    if (!shop || !shop.shop_id) {
+      throw new Error("Shop creation failed or missing shop_id");
+    }
+    products = await getAllProducts(admin);
+
+    let plan = "FREE";
+    try {
+      const billingCheck = await billing.require({
+        plans: [MONTHLY_PLAN],
+        isTest: true,
+        onFailure: () => {
+          throw new Error("No active Plan");
+        },
+      });
+
+      const subscription = billingCheck.appSubscriptions[0];
+      plan = subscription ? "PRO" : "FREE";
+    } catch (billingError) {
+      console.warn("Billing check failed:", billingError.message);
+      plan = "FREE";
+    }
+
+
+    return json({
+      apiKey: process.env.SHOPIFY_API_KEY || "",
+      plan,
+      products,
+      shopID: shop.shop_id,
+      bufferTime: shop.buffer_time,
+      templateId: shop.template_id,
+      logo: shop.logo,
+      coupon: shop.coupon,
+      discount: shop.discount,
+    });
+  } catch (error) {
+    console.error("Loader error:", error);
+    throw new Error("Unable to process the request. Please try again later.");
+  }
 };
 
+
 export default function App() {
-  const { apiKey ,plan} = useLoaderData();
+  const { apiKey ,plan,products,shopID, bufferTime, templateId, logo, coupon, discount} = useLoaderData();
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
-      <ProductProvider>
+      <ProductProvider initialProducts={products}>
         <NavMenu>
           <Link to="/app" rel="home">
             Reorder Reminder
@@ -50,7 +83,7 @@ export default function App() {
           <Link to="/app/myproducts">My Products</Link>
           <Link to="/app/settings">Settings</Link>
         </NavMenu>
-        <Outlet context={{ plan }} />
+        <Outlet context={{ plan,shopID, bufferTime, templateId, logo, coupon, discount }} />
       </ProductProvider>
     </AppProvider>
   );

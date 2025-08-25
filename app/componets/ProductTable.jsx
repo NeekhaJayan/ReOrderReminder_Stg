@@ -1,12 +1,12 @@
-import {IndexTable,Spinner,Text} from "@shopify/polaris";
+import {IndexTable,Spinner,Text,LegacyCard} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
 import SkeletonLoad from "../componets/SkeletonLoad";
 import { useProductsWithEUD } from "../hooks/useProductsWithEUD";
 
-const ProductTable = ({ fetcher,minimalView,spinner,reorderState, editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,selectedproductsWithEUD,activeEditModal,toggleEditModal,activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,editWarningMessages,emailStatus}) => {
-      const {productsWithEUD} = useProductsWithEUD(fetcher);
+const ProductTable = ({productsWithEUD, fetcher,minimalView,spinner,reorderState, editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,selectedproductsWithEUD,activeEditModal,toggleEditModal,activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,editWarningMessages,emailStatus}) => {
+     
     return(
-        <>
+        <LegacyCard>
             
             <IndexTable
                 resourceName={{
@@ -15,9 +15,9 @@ const ProductTable = ({ fetcher,minimalView,spinner,reorderState, editingProduct
                 }}
                 itemCount={productsWithEUD.length}
                 headings={[
-                    { title: "Product Image" },
+                    { title: "" },
                     { title: "Product Name" },
-                    { title: "Estimated Usage Days" },
+                    { title: "Days Product Lasts" },
                     {
                     title: spinner ? (
                         <div style={{ display: "flex", alignItems: "center" }}>
@@ -66,7 +66,7 @@ const ProductTable = ({ fetcher,minimalView,spinner,reorderState, editingProduct
                 ))}
             </IndexTable>
             
-        </>
+        </LegacyCard>
   );
 };
 export default ProductTable;

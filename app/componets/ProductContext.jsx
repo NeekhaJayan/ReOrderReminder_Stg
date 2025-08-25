@@ -3,8 +3,14 @@ import { createContext, useContext, useState } from "react";
 
 const ProductContext = createContext();
 
-export function ProductProvider({ children }) {
-  const [products, setProducts] = useState([]);
+export function ProductProvider({ children, initialProducts }) {
+  const [products, setProducts] = useState(
+    initialProducts || {
+      productsWithMetafield: [],
+      productsWithoutMetafield: []
+    }
+  );
+
   return (
     <ProductContext.Provider value={{ products, setProducts }}>
       {children}

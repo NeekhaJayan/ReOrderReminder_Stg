@@ -1,22 +1,17 @@
-import { useState, useEffect, useCallback,useLayoutEffect } from "react";
+import { useState, useEffect, useCallback,useLayoutEffect,useMemo } from "react";
 import { useFetcher, useLoaderData ,useSearchParams} from "@remix-run/react";
 import { useOutletContext } from '@remix-run/react';
-import {getAllProducts,groupVariantsByProduct} from '../utils/shopify';
+import {groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
 export function useProductsWithEUD(fetcher) {
-    const {productsWithMetafield,shopID,bufferTime,templateId,logo,coupon,discount}=useLoaderData();
+    const { plan,shopID,bufferTime,templateId,logo,coupon,discount } = useOutletContext();
     const {products, setProducts } = useProducts();
-    console.log("products _withEUD:",products)
-//     const productsWithMetafield = products.filter(
-//   p => p.variants.every(v => v.reorder_days)
-// );
+    console.log("products _withEUD:",products.productsWithMetafield);
 
-    const groupedConfigured = groupVariantsByProduct(productsWithMetafield);
-    const normalizedAndFiltered = groupedConfigured.filter(product => 
-    product && Array.isArray(product.variants) && product.variants.length > 0
-        );
-    const [productsWithEUD, setProductsWithEUD] = useState(normalizedAndFiltered);
+    const currentProducts = Array.isArray(products.productsWithMetafield) ? products.productsWithMetafield : [];
+    console.log(currentProducts);
+    // const [productsWithEUD, setProductsWithEUD] = useState(normalizedAndFiltered);
     const tabs = [
     { id: 'without-eud', content: 'Needs Setup', panelID: 'missing-eud' },
     { id: 'with-eud', content: 'Reorder Ready', panelID: 'with-eud' },
@@ -32,32 +27,27 @@ export function useProductsWithEUD(fetcher) {
     const [selectedProductId, setSelectedProductId] = useState(null);
     const [selectedVariantId, setSelectedVariantId] = useState(null);
 
+    const groupedProductsWithEUD = useMemo(() => {
+  const filteredProducts = currentProducts.filter(
+    (p) => p.reorder_days && p.reorder_days.value && Number(p.reorder_days.value) > 0
+  );
+console.log(filteredProducts);
+  return groupVariantsByProduct(filteredProducts);
+}, [currentProducts]);
+console.log(groupedProductsWithEUD)
+
     useEffect(() => {
     if (fetcher?.data?.success || fetcher?.data?.error) {
+      console.log(fetcher.data);
       setBannerWithEUD(fetcher.data);
       const timer = setTimeout(() => setBannerWithEUD(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [fetcher?.data]);
 
-    useEffect(() => {
-        if (fetcher.data?.result) {
-        setProducts(prev =>
-            prev.map(p =>
-            p.id === fetcher.data.result.shopify_product_id
-                ? {
-                    ...p,
-                    variants: p.variants.map(v =>
-                    v.id === fetcher.data.result.shopify_variant_id
-                        ? { ...v, reorder_days: fetcher.data.result.reorder_days }
-                        : v
-                    )
-                }
-                : p
-            )
-        );
-        }
-    }, [fetcher.data, setProducts]);
+
+
+
 
     useEffect(() => {
     if (fetcher.state === "submitting" || fetcher.state === "loading") {
@@ -125,16 +115,7 @@ export function useProductsWithEUD(fetcher) {
         formData.append("type", "product_update");
         console.log("JSUsageDays:",reorder_days);
         fetcher.submit(formData, { method: "patch" });
-        setProductsWithEUD(prev =>
-            prev.map(product => ({
-            ...product,
-            variants: product.variants.map(v =>
-                v.shopify_variant_id === variant_id
-                ? { ...v, reorder_days }
-                : v
-            ),
-            }))
-        );
+        
         setEditingProduct(null);
         setReorderState(prev => {
             const copy = { ...prev };
@@ -166,20 +147,12 @@ export function useProductsWithEUD(fetcher) {
         formData.append("shopId", shopID);
         formData.append("productId", product_id);
         formData.append("productVariantId", variant_id); 
+       
         formData.append("reorder_days", null);
         formData.append("type", "product_reset");
         setSpinner(true);
         fetcher.submit(formData, { method: "patch" });
-        setProductsWithEUD(prev =>
-                prev
-                .map(product => ({
-                    ...product,
-                    variants: product.variants.filter(
-                    v => v.shopify_variant_id !== selectedVariantId
-                    )
-                }))
-                .filter(product => product.variants.length > 0) // remove product if no variants left
-            );
+        
                 
                 setEditingProduct(null);
                 setSelectedProductId(null);
@@ -203,7 +176,7 @@ export function useProductsWithEUD(fetcher) {
     
     return {
         tabs,selectedTab,setSelectedTab,
-       productsWithEUD,
+       productsWithEUD: groupedProductsWithEUD,
     fetcher,
     reorderState,
     spinner,
