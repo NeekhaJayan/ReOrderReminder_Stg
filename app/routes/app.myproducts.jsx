@@ -37,7 +37,7 @@ export const action = async ({ request }) => {
           else{
            
             result = await productInstance.updateProductData(formData);
-            console.log("result",result);
+            
             metafield = await updateProductVariantMetafield(admin, formData);
             baseResult = Array.isArray(result) ? result[0] : result;
             if (!baseResult) {
@@ -67,6 +67,23 @@ export const action = async ({ request }) => {
             }
           }
         }
+        else if (method === "POST" && type === "test_email") {
+          const result = await productInstance.testEmail(formData);
+          return json({
+            type: "testEmailSent",
+            success: result?.message || "Email Sent Successfully",
+          });
+        } 
+        else if (method === "POST") {
+          const result_data = await productInstance.fetchEmailCount(formData);
+          return json({
+            type: "fetchEmailCount",
+            Scheduled_Count: result_data.Scheduled_Count || 0,
+            Dispatched_Count: result_data.Dispatched_Count || 0,
+            Reorder_Email_Source: result_data.Reorder_Email_Source || 0,
+          });
+        }
+
         else{
               result = await productInstance.saveProductData(formData);
               metafield=await updateProductVariantMetafield(admin,formData);
@@ -76,7 +93,7 @@ export const action = async ({ request }) => {
                   shopify_variant_id: `gid://shopify/ProductVariant/${baseResult.shopify_variant_id}`,
                   reorder_days: { value: String(baseResult.reorder_days) }
                 };
-              console.log("metafield", normalizedResult);
+              
 
               return json({success:"Estimated Usage Days saved successfully!",result:normalizedResult} );
             }
@@ -120,30 +137,11 @@ export default function MyProducts() {
       });
     }
   }, [fetcher?.data, setProducts]);
-  const {
-    tabs,selectedTab,setSelectedTab,
-    productsWithEUD,
-    reorderState,
-    spinner,
-    editingProduct,
-    editWarningMessages,
-    handleReorderChange,
-    editReorderDay,
-    saveReorderDay,
-    resetReorderfield,
-    confirmReset,
-    toggleModal,
-    activeModal,
-    selectedProductId,
-    selectedVariantId,
-    onCancel,
-    bannerWithEUD,
-    loadingWithEUD,
-    } = useProductsWithEUD(fetcher);
+  const {tabs,selectedTab,setSelectedTab,productsWithEUD,spinner,bannerWithEUD,loadingWithEUD} = useProductsWithEUD(fetcher);
   const {banner, loading} = useProductsWithoutEUD(fetcher);
  
  return(
-      <Page  >
+      <Page>
       <Card>
         <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab} fitted style={{borderBlockColor:"Highlight"}}>
         {selectedTab === 0 ? (
@@ -162,26 +160,8 @@ export default function MyProducts() {
             {bannerWithEUD?.success && <BannerComponent title={bannerWithEUD.success} tone="success" />}
             {bannerWithEUD?.error && <BannerComponent title={bannerWithEUD.error} tone="critical" />}
 
-            {loadingWithEUD && <div className="header-spinner">Saving...</div>}
-            <ProductTable
-                      productsWithEUD={productsWithEUD}
-                      fetcher={fetcher}
-                      minimalView={false}
-                      spinner={spinner}
-                      reorderState={reorderState}
-                      editingProduct={editingProduct}
-                      editReorderDay={editReorderDay}
-                      resetReorderfield={resetReorderfield}
-                      saveReorderDay={saveReorderDay}
-                      cancelReorderDays={onCancel}
-                      handleReorderChange={handleReorderChange} 
-                      activeModal={activeModal}
-                      toggleModal={toggleModal}
-                      confirmReset={confirmReset}
-                      selected_productId={selectedProductId}
-                      selected_variantId={selectedVariantId}
-                      editWarningMessages={editWarningMessages}
-                    />
+            {loadingWithEUD && <div className="header-spinner">Processing...</div>}
+            <ProductTable productsWithEUD={productsWithEUD} fetcher={fetcher} spinner={spinner}/>
           </>
           
         )}

@@ -32,7 +32,6 @@ export function ProductTableInput({ fetcher }) {
     else if (someSelected) selected = "indeterminate";
 
     const mainRowProps = {
-      key: subheaderId,
       position: productIndex,
     };
 
@@ -52,7 +51,7 @@ export function ProductTableInput({ fetcher }) {
 
     return (
       <Fragment key={subheaderId}>
-        <IndexTable.Row {...mainRowProps}>
+        <IndexTable.Row key={subheaderId} {...mainRowProps}>
           <IndexTable.Cell scope="colgroup" as="th" id={mainRowProps.id}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px"}}>
               {productImage ? (

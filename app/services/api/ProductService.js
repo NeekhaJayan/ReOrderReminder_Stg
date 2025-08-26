@@ -26,7 +26,7 @@ class Product{
 
     async saveProductData(formData)
     {
-        console.log("ProductID:",formData.get("productId"));
+        
         const productId = formData.get("productId").replace("gid://shopify/Product/", "");
         const shopid =formData.get("shopId");
         const productImage=formData.get("productImage")
@@ -41,7 +41,7 @@ class Product{
             image_url: productImage,
             reorder_days,
         }];
-        console.log("InputData:",inputData);
+        
         const response = await fetch(`${APP_SETTINGS.API_ENDPOINT}/auth/products`, {
             method:"POST",
             headers: {
@@ -127,8 +127,8 @@ class Product{
     }
 
     async testEmail(formData){
-        const product_id=formData.get("productId")
-        const variant_id=formData.get("variantId")
+        const product_id=formData.get("productId").replace("gid://shopify/Product/", "");
+        const variant_id=formData.get("variantId").replace("gid://shopify/ProductVariant/", "");
         const shop_id=formData.get("shopId")
         const response = await fetch(`${APP_SETTINGS.API_ENDPOINT}/auth/test-email-reminder?product_id=${product_id}&variant_id=${variant_id}&shop_id=${shop_id}`, {
                         method:"POST",

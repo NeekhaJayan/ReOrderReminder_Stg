@@ -1,10 +1,9 @@
 import {IndexTable,Spinner,Text,LegacyCard} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
 import SkeletonLoad from "../componets/SkeletonLoad";
-import { useProductsWithEUD } from "../hooks/useProductsWithEUD";
 
-const ProductTable = ({productsWithEUD, fetcher,minimalView,spinner,reorderState, editingProduct,editReorderDay,resetReorderfield,saveReorderDay,cancelReorderDays,handleReorderChange,activeModal,toggleModal,confirmReset,selected_productId,selected_variantId,selectedproductsWithEUD,activeEditModal,toggleEditModal,activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,editWarningMessages,emailStatus}) => {
-     
+const ProductTable = ({productsWithEUD,fetcher,spinner}) => {
+     console.log(productsWithEUD)
     return(
         <LegacyCard>
             
@@ -23,7 +22,7 @@ const ProductTable = ({productsWithEUD, fetcher,minimalView,spinner,reorderState
                         <div style={{ display: "flex", alignItems: "center" }}>
                         <Spinner size="small" accessibilityLabel="Loading data" />
                         <Text variant="bodyMd" as="span" style={{ marginLeft: "8px" }}>
-                            Saving
+                            Processing
                         </Text>
                         </div>
                     ) : (
@@ -34,35 +33,13 @@ const ProductTable = ({productsWithEUD, fetcher,minimalView,spinner,reorderState
                 ]}
                 selectable={false}
                 >
-                {productsWithEUD.map((productGroup, index) => (
+                {productsWithEUD.filter(productGroup => productGroup && productGroup.shopify_product_id)
+                .map((productGroup, index) => (
                     <ProductTableRow
-                    key={index}
+                    key={productGroup.shopify_product_id}
+                    fetcher={fetcher}
                     product={productGroup}
-                    isGrouped
-                    reorderState={reorderState}
-                    isEditing={editingProduct}
-                    onEdit={editReorderDay}
-                    onReset={resetReorderfield}
-                    onSave={saveReorderDay}
-                    onCancel={cancelReorderDays}
-                    onReorderChange={handleReorderChange}
-                    activeEditModal={activeEditModal}
-                    toggleEditModal={toggleEditModal}
-                    activeModal={activeModal}
-                    toggleModal={toggleModal}
-                    confirmReset={confirmReset}
-                    selectedProductId={selected_productId}
-                    selectedVariantId={selected_variantId}
-                    selectedproductsWithEUD={selectedproductsWithEUD}
-                    activeEmailModal={activeEmailModal} 
-                    toggleEmailModal={toggleEmailModal} 
-                    scheduleEmailCount={scheduleEmailCount} 
-                    dispatchEmailCount={dispatchEmailCount} 
-                    orderSource={orderSource}
-                    editWarningMessages={editWarningMessages}
-                    emailStatus={emailStatus}
-                    minimalView={minimalView}
-                    />
+                    isGrouped/>
                 ))}
             </IndexTable>
             

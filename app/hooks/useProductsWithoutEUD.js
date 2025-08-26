@@ -60,7 +60,6 @@ export function useProductsWithoutEUD(fetcher) {
  useEffect(() => {
     if (fetcher?.data?.success || fetcher?.data?.error) {
     setBanner(fetcher.data);
-    console.log(fetcher.data)
     const timer = setTimeout(() => setBanner(null), 3000);
     // Cleanup the timer when the component unmounts or the effect re-runs
     return () => clearTimeout(timer);

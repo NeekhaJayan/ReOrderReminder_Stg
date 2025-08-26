@@ -7,11 +7,7 @@ import { useProducts } from "../componets/ProductContext";
 export function useProductsWithEUD(fetcher) {
     const { plan,shopID,bufferTime,templateId,logo,coupon,discount } = useOutletContext();
     const {products, setProducts } = useProducts();
-    console.log("products _withEUD:",products.productsWithMetafield);
-
     const currentProducts = Array.isArray(products.productsWithMetafield) ? products.productsWithMetafield : [];
-    console.log(currentProducts);
-    // const [productsWithEUD, setProductsWithEUD] = useState(normalizedAndFiltered);
     const tabs = [
     { id: 'without-eud', content: 'Needs Setup', panelID: 'missing-eud' },
     { id: 'with-eud', content: 'Reorder Ready', panelID: 'with-eud' },
@@ -31,23 +27,18 @@ export function useProductsWithEUD(fetcher) {
   const filteredProducts = currentProducts.filter(
     (p) => p.reorder_days && p.reorder_days.value && Number(p.reorder_days.value) > 0
   );
-console.log(filteredProducts);
+
   return groupVariantsByProduct(filteredProducts);
 }, [currentProducts]);
-console.log(groupedProductsWithEUD)
+
 
     useEffect(() => {
     if (fetcher?.data?.success || fetcher?.data?.error) {
-      console.log(fetcher.data);
       setBannerWithEUD(fetcher.data);
       const timer = setTimeout(() => setBannerWithEUD(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [fetcher?.data]);
-
-
-
-
 
     useEffect(() => {
     if (fetcher.state === "submitting" || fetcher.state === "loading") {
@@ -113,7 +104,6 @@ console.log(groupedProductsWithEUD)
         formData.append("productVariantId", variant_id); 
         formData.append("reorder_days", reorder_days);
         formData.append("type", "product_update");
-        console.log("JSUsageDays:",reorder_days);
         fetcher.submit(formData, { method: "patch" });
         
         setEditingProduct(null);
@@ -167,14 +157,80 @@ console.log(groupedProductsWithEUD)
     const [dispatchEmailCount, setDispatchEmailCount] = useState(null);
     const [orderSource, setOrderSource]= useState(null);
     const [selectedProductData, setSelectedProductData] = useState(null);
-    const [emailStatus, setEmailStatus] = useState(""); 
+    const [emailStatus, setEmailStatus] = useState({}); 
 
     const toggleEmailModal = useCallback(() => {
         setActiveEmailModal((prev) => !prev);
-        console.log("toggleEmailModal clicked! New State:", !activeEmailModal);
     }, []);
+
+    const showEmailCount = async (product,product_id,variant_id) => {
+        try {
+            setSelectedProductData(product);
+            setSelectedProductId(product_id);
+            setSelectedVariantId(variant_id);
+            setIsFetchingEmailCount(true);
+            setEmailStatus(prev => {
+              const copy = { ...prev };
+              delete copy[variant_id];
+              return copy;
+            });
+            fetcher.submit(
+                {
+                    shopId: shopID,
+                    productId: product_id,
+                    variantId: variant_id,
+                    type:"fetchEmailCount",
+                },
+                { method: "post" }
+            );
+            
+        } catch (error) {
+            setIsFetchingEmailCount(false);
+            console.error("Error fetching email count:", error);
+            
+            
+            
+        }
+    };
+
+    const testEmailReminder=async(product_id,variant_id)=>{
+        fetcher.submit(
+                {
+                    shopId: shopID,
+                    productId: product_id,
+                    variantId: variant_id,
+                    type:"test_email",
+                },
+                { method: "post" }
+            );
+        
+    }
+
+    useEffect(() => {
+            if (isFetchingEmailCount) return;
+            if (fetcher.state === "submitting" || fetcher.state === "loading") {
+                setSpinner(true); // Start loading spinner
+            } else {
+                setSpinner(false); // Stop spinner when data is ready
+            }
+        }, [fetcher.state, isFetchingEmailCount]);
+
+     useLayoutEffect(() => {
+        if (fetcher.data?.type === "fetchEmailCount") {    
+            setScheduleEmailCount(fetcher.data.Scheduled_Count);
+            setDispatchEmailCount(fetcher.data.Dispatched_Count);
+            setOrderSource(fetcher.data.Reorder_Email_Source);
+            toggleEmailModal();
+        }
+        // if (fetcher.data?.type === "testEmailSent") {    
+        //     setEmailStatus(prev => ({
+        //     ...prev,
+        //     [selectedVariantId]: fetcher.data.message
+        //     }));
+        // }
+    }, [fetcher?.data]);
     
-    return {
+    return {plan,bufferTime,
         tabs,selectedTab,setSelectedTab,
        productsWithEUD: groupedProductsWithEUD,
     fetcher,
@@ -193,7 +249,8 @@ console.log(groupedProductsWithEUD)
     selectedVariantId,
     onCancel,
     bannerWithEUD,
-    loadingWithEUD: fetcher?.state !== "idle",
+    loadingWithEUD: fetcher?.state !== "idle",selectedProductData,
+    activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,emailStatus
       };
 
 };

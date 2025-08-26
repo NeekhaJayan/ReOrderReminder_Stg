@@ -4,11 +4,30 @@ import { useState,useCallback} from "react";
 import { useNavigate } from "@remix-run/react";
 import {InlineErrorComponent} from "../componets/InlineErrorComponent";
 import { ChevronDownIcon, ChevronUpIcon } from "@shopify/polaris-icons";
+import ProductAnalyticsCard from "./ProductAnalyticsCard";
 import {EmailFollowUpIcon} from '@shopify/polaris-icons';
+import { useProductsWithEUD } from "../hooks/useProductsWithEUD";
 // import { useAppData } from "../hooks/useAppData";
-const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSave,onCancel, onReorderChange,activeModal,toggleModal,confirmReset,selectedProductId,selectedVariantId,editWarningMessages,minimalView}) => {
+const ProductTableRow = ({product,fetcher}) => {
   const navigate =useNavigate();
-  // const {plan,bufferTime}=useAppData();
+  const {
+    plan,bufferTime,
+    reorderState,
+    editingProduct,
+    editWarningMessages,
+    handleReorderChange,
+    editReorderDay,
+    saveReorderDay,
+    resetReorderfield,
+    confirmReset,
+    toggleModal,
+    activeModal,
+    selectedProductId,
+    selectedVariantId,
+    onCancel,
+    selectedProductData,
+    activeEmailModal,toggleEmailModal,showEmailCount,testEmailReminder,scheduleEmailCount,dispatchEmailCount,orderSource,emailStatus
+    } = useProductsWithEUD(fetcher);
   const [open, setOpen] = useState(false);
   const handleToggle = useCallback(() => setOpen((open) => !open), []);
   if (!product || !Array.isArray(product.variants)) {
@@ -19,10 +38,10 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
         <>
         {variants.filter(variant => variant && variant.shopify_variant_id).map((variant, idx) => {
         if (!variant?.shopify_variant_id) return null; 
-        const isThisEditing = isEditing === variant.shopify_variant_id;
+        const isThisEditing = editingProduct === variant.shopify_variant_id;
         const imageSrc = productImage ||"../product-place-holder.png";
         return (
-        <IndexTable.Row id={variant.shopify_variant_id} position={variant.shopify_variant_id} key={variant.shopify_variant_id}>
+        <IndexTable.Row id={`${shopify_product_id}-${variant.shopify_variant_id}`}  position={idx} key={`${shopify_product_id}-${variant.shopify_variant_id}`}>
               <IndexTable.Cell>{product.isNew && <Badge tone="attention">New</Badge>}
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Thumbnail source={imageSrc || "../product-place-holder.png"} alt={productTitle|| "Product Image"} />
@@ -44,7 +63,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                   <div style={{ width: "50px", alignItems: "center" }}>
                     <TextField
                       value={reorderState[variant.shopify_variant_id|| '']}
-                      onChange={(value) => onReorderChange(variant.shopify_variant_id, value)}
+                      onChange={(value) => handleReorderChange(variant.shopify_variant_id, value)}
                       disabled={!isThisEditing}
                       error={!!editWarningMessages[variant.shopify_variant_id|| '']}
                     />
@@ -63,7 +82,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                   <div>
                     {isThisEditing ? (
                       <ButtonGroup>
-                        <Button onClick={() => onSave(shopify_product_id,variant.shopify_variant_id,reorderState[variant.shopify_variant_id])} variant="primary">
+                        <Button onClick={() => saveReorderDay(shopify_product_id,variant.shopify_variant_id,reorderState[variant.shopify_variant_id])} variant="primary">
                           Save
                         </Button>
                         <Button primary onClick={() => onCancel(variant.shopify_variant_id)}>
@@ -71,7 +90,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                         </Button>
                       </ButtonGroup>
                     ) : (
-                      <Button variant="plain" onClick={() => onEdit(variant.shopify_variant_id, variant.reorder_days)}>
+                      <Button variant="plain" onClick={() => editReorderDay(variant.shopify_variant_id, variant.reorder_days)}>
                         Edit
                       </Button>
                     )}
@@ -99,7 +118,7 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                       title="Reset Estimated Usage Days"
                       primaryAction={{
                         content: "Reset",
-                        onAction: () => onReset(selectedProductId, selectedVariantId),
+                        onAction: () => resetReorderfield(selectedProductId, selectedVariantId),
                       }}
                       secondaryAction={{
                         content: "Cancel",
@@ -119,41 +138,56 @@ const ProductTableRow = ({ product, reorderState,isEditing, onEdit,onReset, onSa
                 </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
-                <div style={{ display: "flex", alignItems: "center", gap: "5px",width:'200px' }}>
-                      <LegacyStack vertical>
-                        <Button
-                          onClick={handleToggle}
-                          ariaExpanded={open}
-                          ariaControls={`details-${variant.shopify_variant_id}`}
-                        >
-                          <Icon source={open ? ChevronUpIcon : ChevronDownIcon} />
-                        </Button>
-                        <Collapsible
-                          open={open}
-                          id="basic-collapsible"
-                          transition={{ duration: "500ms", timingFunction: "ease-in-out" }}
-                          expandOnPrint
-                        >
-                          <TextContainer>
-                            <p>
-                              Your mailing list lets you contact customers or visitors who
-                              have shown an interest in your store. Reach out to them with
-                              exclusive offers or updates about your products.
-                            </p>
-                            <Link url="#">Test link</Link>
-                          </TextContainer>
-                        </Collapsible>
-                      </LegacyStack>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem",width:'200px',paddingLeft:'1rem' }}>
+                  <Tooltip  content="ReOrder Reminder Pro Performance"> 
+                    <Button onClick={() =>showEmailCount(product,shopify_product_id, variant.shopify_variant_id)}>  <img 
+                                src="../bar-chart.png"  
+                                alt="Email Icon"
+                                style={{ width: "20px", height: "20px" }}
+                            />
+                    </Button></Tooltip>
+                    {activeEmailModal && selectedVariantId === variant.shopify_variant_id && (<Modal 
+                  size="large" 
+                  open={activeEmailModal} 
+                  onClose={() => {
+                      console.log("Closing modal...");
+                      toggleEmailModal();
+                  }} 
+                  title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <img src="../bar-chart.png" alt="Analytics Icon" style={{ width: '20px', height: '20px' }} />
+                      <span>ReOrder Reminder Pro Performance</span>
+                    </div>
+                  }
+                >
+                <Modal.Section>
+                {plan === "PRO"?<div><p>Analytics Available in Pro Plan.
+                  Upgrade to Pro to unlock product insights and email stats.
+              👉 <Button variant="secondary" onClick={() => navigate("/app/settings?tab=2")}>
+                          Upgrade
+                      </Button></p></div>:(
+                          selectedProductData && (<div dangerouslySetInnerHTML={{ __html: ProductAnalyticsCard({
+                      productName: selectedProductData.productTitle,
+                      scheduleEmailCount: scheduleEmailCount,
+                      dispatchEmailCount: dispatchEmailCount,
+                      orderSource: orderSource,
+                      reorder_days:selectedProductData.variants?.[0]?.reorder_days,
+                      buffer_Time:bufferTime,
+                    }) }} />)
+                ) }
+                </Modal.Section>
+                </Modal> )}
+                                          
                       <Tooltip content="Test Email Reminder">
-                        <Button variant="monochromePlain">
+                        <Button variant="monochromePlain" onClick={() =>testEmailReminder(shopify_product_id, variant.shopify_variant_id)}>
                           <Icon source={EmailFollowUpIcon} tone="info" />
                         </Button>
                       </Tooltip>
                      
-                  </div>
+                </div>
               </IndexTable.Cell>
            
-            </IndexTable.Row>
+        </IndexTable.Row>
              );
       })}
         </>
