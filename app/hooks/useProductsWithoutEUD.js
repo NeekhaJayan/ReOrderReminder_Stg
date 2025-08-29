@@ -92,7 +92,7 @@ export function useProductsWithoutEUD(fetcher,queryValue) {
   };
     
     
-    
+    console.log(groupedProducts,allVariantRows)
     
     return {groupedProducts,allVariantRows,headings,resourceName,formState,handleChange,handleSave,fetcher,
     banner,

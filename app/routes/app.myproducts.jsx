@@ -208,7 +208,7 @@ export default function MyProducts() {
 
             {loading && <div className="header-spinner">Saving...</div>}
             
-              <ProductTableInput fetcher={fetcher} formState={formState} handleChange={handleChange} handleSave={handleSave} groupedProducts={groupedProducts} allVariantRows={allVariantRows} headings={headings} />
+              <ProductTableInput fetcher={fetcher} formState={formState} handleChange={handleChange} handleSave={handleSave} groupedProducts={groupedProducts|| []} allVariantRows={allVariantRows|| []} headings={headings} />
             
             
           </>  
