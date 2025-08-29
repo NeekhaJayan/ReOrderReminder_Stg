@@ -195,6 +195,7 @@ export default function MyProducts() {
           tabs={tabs || []}
           selected={selected}
           onSelect={setSelected}
+          filters={[]} 
           appliedFilters={[]}
           onClearAll={handleFiltersClearAll}
           mode={mode}
