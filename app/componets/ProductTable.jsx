@@ -5,8 +5,6 @@ import SkeletonLoad from "../componets/SkeletonLoad";
 const ProductTable = ({productsWithEUD,fetcher,spinner}) => {
      console.log(productsWithEUD)
     return(
-        <LegacyCard>
-            
             <IndexTable
                 resourceName={{
                     singular: "Product",
@@ -15,7 +13,7 @@ const ProductTable = ({productsWithEUD,fetcher,spinner}) => {
                 itemCount={productsWithEUD.length}
                 headings={[
                     { title: "" },
-                    { title: "Product Name" },
+                    { title: "" },
                     { title: "Days Product Lasts" },
                     {
                     title: spinner ? (
@@ -42,8 +40,6 @@ const ProductTable = ({productsWithEUD,fetcher,spinner}) => {
                     isGrouped/>
                 ))}
             </IndexTable>
-            
-        </LegacyCard>
   );
 };
 export default ProductTable;

@@ -1,3 +1,4 @@
+// ProductTableInput.jsx
 import {
   LegacyCard,
   IndexTable,
@@ -6,7 +7,7 @@ import {
   useBreakpoints,
   TextField,
   Button,
-  Avatar,
+  Avatar,Thumbnail
 } from "@shopify/polaris";
 import React, { Fragment, useMemo } from "react";
 import { useProductsWithoutEUD } from "../hooks/useProductsWithoutEUD";
@@ -54,17 +55,11 @@ export function ProductTableInput({ fetcher }) {
         <IndexTable.Row key={subheaderId} {...mainRowProps}>
           <IndexTable.Cell scope="colgroup" as="th" id={mainRowProps.id}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px"}}>
-              {productImage ? (
-                <Avatar
-                  size="md"
-                  source={productImage || "../product-place-holder.png"}
-                  alt={productTitle}
-                />
-              ) : (
-                <Avatar size="md" name={productTitle} />
-              )}
-              <div style={{ paddingLeft: "2rem", width: "600px", textWrap: "wrap" }}>
-                <Text variant="bodyMd" fontWeight="semibold" as="span">
+              
+                <Thumbnail source={productImage || "../product-place-holder.png"} alt={productTitle|| "Product Image"} />
+               
+              <div style={{ paddingLeft: "2rem", width: "500px", textWrap: "wrap" }}>
+                <Text variant="bodyMd" fontWeight="regular" as="span">
                   {productTitle}
                 </Text>
               </div>
@@ -115,8 +110,8 @@ export function ProductTableInput({ fetcher }) {
             >
               <IndexTable.Cell>
                 <div style={{ paddingLeft: "2rem", width: "300px", textWrap: "wrap",textAlign: "center" }}>
-                  <Text as="span">
-                    {variant.displayName || variant.variantTitle}
+                  <Text as="span" style={{ fontStyle: "italic" }}>
+                   <i> {variant.displayName || variant.variantTitle}</i>
                   </Text>
                 </div>
               </IndexTable.Cell>
@@ -146,7 +141,7 @@ export function ProductTableInput({ fetcher }) {
   });
 
   return (
-    <LegacyCard>
+    
       <IndexTable
         condensed={smDown}
         onSelectionChange={handleSelectionChange}
@@ -159,6 +154,6 @@ export function ProductTableInput({ fetcher }) {
       >
         {rowMarkup}
       </IndexTable>
-    </LegacyCard>
+    
   );
 }

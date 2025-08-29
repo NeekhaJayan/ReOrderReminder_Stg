@@ -4,15 +4,10 @@ import { useOutletContext } from '@remix-run/react';
 import {groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
-export function useProductsWithEUD(fetcher) {
+export function useProductsWithEUD(fetcher,queryValue) {
     const { plan,shopID,bufferTime,templateId,logo,coupon,discount } = useOutletContext();
     const {products, setProducts } = useProducts();
     const currentProducts = Array.isArray(products.productsWithMetafield) ? products.productsWithMetafield : [];
-    const tabs = [
-    { id: 'without-eud', content: 'Needs Setup', panelID: 'missing-eud' },
-    { id: 'with-eud', content: 'Reorder Ready', panelID: 'with-eud' },
-  ];
-    const [selectedTab, setSelectedTab] = useState(0);
     const [reorderState, setReorderState] = useState({});
     const [editingProduct, setEditingProduct] = useState(null);
     const [spinner,setSpinner]=useState(false);
@@ -27,9 +22,13 @@ export function useProductsWithEUD(fetcher) {
   const filteredProducts = currentProducts.filter(
     (p) => p.reorder_days && p.reorder_days.value && Number(p.reorder_days.value) > 0
   );
-
-  return groupVariantsByProduct(filteredProducts);
-}, [currentProducts]);
+  if (!queryValue || queryValue.trim() === '') return groupVariantsByProduct(filteredProducts);
+//   return groupVariantsByProduct(filteredProducts);
+return groupVariantsByProduct(
+      filteredProducts.filter(p =>
+        p.productTitle?.toLowerCase().includes(queryValue.toLowerCase())
+      ));
+}, [currentProducts,queryValue]);
 
 
     useEffect(() => {
@@ -231,7 +230,6 @@ export function useProductsWithEUD(fetcher) {
     }, [fetcher?.data]);
     
     return {plan,bufferTime,
-        tabs,selectedTab,setSelectedTab,
        productsWithEUD: groupedProductsWithEUD,
     fetcher,
     reorderState,

@@ -1,6 +1,6 @@
 
 import { json } from "@remix-run/node";
-import {Page,Tabs,Card} from "@shopify/polaris";
+import {Page,Tabs,Card,IndexFilters,} from "@shopify/polaris";
 import { useFetcher} from "@remix-run/react";
 import { useEffect } from "react";
 import { shopInstance } from "../services/api/ShopService";
@@ -108,6 +108,8 @@ export const action = async ({ request }) => {
 export default function MyProducts() {
   const fetcher = useFetcher();
   const { setProducts } = useProducts(); 
+  const [queryValue, setQueryValue] = useState('');
+  
   useEffect(() => {
     if (fetcher?.data?.result) {
       const updatedVariant = fetcher.data.result;
@@ -137,14 +139,69 @@ export default function MyProducts() {
       });
     }
   }, [fetcher?.data, setProducts]);
-  const {tabs,selectedTab,setSelectedTab,productsWithEUD,spinner,bannerWithEUD,loadingWithEUD} = useProductsWithEUD(fetcher);
-  const {banner, loading} = useProductsWithoutEUD(fetcher);
+  const {productsWithEUD,spinner,bannerWithEUD,loadingWithEUD} = useProductsWithEUD(fetcher,queryValue);
+  const { banner, loading} = useProductsWithoutEUD(fetcher,queryValue);
+
+  const [selected, setSelected] = useState(0);
+  const { mode, setMode } = useSetIndexFiltersMode();
+
+  const tabs = [
+    { id: "needs-setup", content: "Needs Setup" },
+    { id: "reorder-ready", content: "Reorder Ready" },
+  ];
+
+    const onHandleCancel = () => {};
+    const handleQueryValueRemove = useCallback(() => setQueryValue(''), []);
+    const handleFiltersClearAll = useCallback(() => {
+        handleQueryValueRemove();
+      }, [
+        handleQueryValueRemove,
+      ]);
+    const filters = [
+      {
+        key: "status",
+        label: "Status",
+        filter: (
+          <ChoiceList
+            title="Status"
+            titleHidden
+            choices={[
+              { label: "Reorder Ready", value: "ready" },
+              { label: "Needs Setup", value: "needsSetup" },
+            ]}
+            selected={[selected === 0 ? "needsSetup" : "ready"]}
+            onChange={() => {}}
+          />
+        ),
+        shortcut: true,
+      },
+    ];
+  
+
  
  return(
       <Page>
       <Card>
-        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab} fitted style={{borderBlockColor:"Highlight"}}>
-        {selectedTab === 0 ? (
+        <IndexFilters
+          queryValue={queryValue}
+          onQueryChange={setQueryValue}
+          onQueryClear={() => setQueryValue("")}
+          cancelAction={{
+          onAction: onHandleCancel,
+          disabled: false,
+          loading: false,
+        }}
+          tabs={tabs || []}
+          selected={selected}
+          onSelect={setSelected}
+          filters={filters||[]}
+          appliedFilters={[]}
+          onClearAll={handleFiltersClearAll}
+          mode={mode}
+          setMode={setMode}
+          canCreateNewView={false}
+        />
+        {selected === 0  ? (
           <>
             {banner?.success && <BannerComponent title={banner.success} tone="success" />}
             {banner?.error && <BannerComponent title={banner.error} tone="critical" />}
@@ -165,7 +222,7 @@ export default function MyProducts() {
           </>
           
         )}
-        </Tabs>
+
       </Card>
       </Page>
  )

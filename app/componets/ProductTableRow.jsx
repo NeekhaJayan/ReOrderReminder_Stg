@@ -48,11 +48,11 @@ const ProductTableRow = ({product,fetcher}) => {
                 </div>
               </IndexTable.Cell>
               <IndexTable.Cell>
-                <div style={{ whiteSpace: "normal", wordWrap: "break-word", maxWidth: "600px" }}>
-                  <strong>{productTitle}</strong>
+                <div style={{ maxWidth: "500px",  textWrap: "wrap"  }}>
+                  {productTitle}
                   {variants.length > 1 && (
                     <div style={{ fontSize: "0.875rem", color: "#666" }}>
-                      {variant.displayName || variant.variantTitle}
+                      <i>{variant.displayName || variant.variantTitle}</i>
                     </div>
                   )}
                 </div>

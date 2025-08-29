@@ -3,11 +3,11 @@ import { useOutletContext } from '@remix-run/react';
 import {groupVariantsByProduct} from '../utils/shopify';
 import { useProducts } from "../componets/ProductContext";
 
-export function useProductsWithoutEUD(fetcher) {
+export function useProductsWithoutEUD(fetcher,queryValue) {
     const { plan,shopID,bufferTime,templateId,logo,coupon,discount } = useOutletContext();
     const {products, setProducts } = useProducts();
     const [taggedWith, setTaggedWith] = useState('VIP');
-    const [queryValue, setQueryValue] = useState(undefined);
+    // const [queryValue, setQueryValue] = useState(undefined);
     const [formState, setformState] = useState({});
     const [banner, setBanner] = useState(null);
     const resourceName = {
@@ -22,41 +22,37 @@ export function useProductsWithoutEUD(fetcher) {
   ];
 
   const getFilteredItems = useCallback((items) => {
-        
+        console.log(queryValue);
         if (!queryValue || queryValue.trim() === '') {
             return items;
         }
 
-        return items.filter(item => {
-            const matchesTag = taggedWith
-            ? item.tags?.some(tag => tag.toLowerCase().includes(taggedWith.toLowerCase()))
-            : true;
-
-            const matchesQuery = queryValue
-            ? item.productTitle?.toLowerCase().includes(queryValue.toLowerCase())
-            : true;
-
-            return matchesQuery;
-        });
-    }, [taggedWith, queryValue]);
+        return items.filter((item) => {
+      const q = queryValue.toLowerCase();
+      const productMatch = item.productTitle?.toLowerCase().includes(q);
+      
+      return productMatch ;
+    });
+    }, [queryValue]);
 
     const groupedProducts = useMemo(() => {
       const grouped = groupVariantsByProduct(products.productsWithoutMetafield || []);
-      return getFilteredItems(grouped);
-    }, [products.productsWithoutMetafield, getFilteredItems]);
-
-    const allVariantRows = useMemo(() => {
-    return groupedProducts.flatMap((product) =>
-      product.variants.map((variant) => ({
-        ...variant,
-        productTitle: product.productTitle,
-        productImage: product.productImage,
-        shopify_product_id: product.shopify_product_id,
-        id: variant.shopify_variant_id,
-      }))
-    );
-  }, [groupedProducts]);
+      return grouped;
+    }, [products.productsWithoutMetafield]);
     
+    const allVariantRows = useMemo(() => {
+      const allVariants = groupedProducts.flatMap((product) =>
+        product.variants.map((variant) => ({
+          ...variant,
+          productTitle: product.productTitle,
+          productImage: product.productImage,
+          shopify_product_id: product.shopify_product_id,
+          id: variant.shopify_variant_id,
+        }))
+      );
+      return getFilteredItems(allVariants);
+  }, [groupedProducts,getFilteredItems]);
+    console.log(allVariantRows);
  useEffect(() => {
     if (fetcher?.data?.success || fetcher?.data?.error) {
     setBanner(fetcher.data);
