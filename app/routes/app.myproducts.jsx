@@ -3,7 +3,7 @@ import { json } from "@remix-run/node";
 import {Page,Tabs,Card,IndexFilters, ChoiceList,
   useSetIndexFiltersMode,} from "@shopify/polaris";
 import { useFetcher} from "@remix-run/react";
-import { useEffect ,useState} from "react";
+import { useEffect, useState, useCallback} from "react";
 import { shopInstance } from "../services/api/ShopService";
 import { productInstance } from "../services/api/ProductService";
 import { authenticate } from "../shopify.server";
