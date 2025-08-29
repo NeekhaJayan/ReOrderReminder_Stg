@@ -10,14 +10,19 @@ import {
   Avatar,Thumbnail
 } from "@shopify/polaris";
 import React, { Fragment, useMemo } from "react";
-import { useProductsWithoutEUD } from "../hooks/useProductsWithoutEUD";
+// import { useProductsWithoutEUD } from "../hooks/useProductsWithoutEUD";
 
-export function ProductTableInput({ fetcher }) {
-  const { formState, handleChange, handleSave, groupedProducts,allVariantRows, headings } = useProductsWithoutEUD(fetcher);
+export function ProductTableInput({ fetcher,formState, handleChange, handleSave, groupedProducts,allVariantRows, headings }) {
+  // const { formState, handleChange, handleSave, groupedProducts,allVariantRows, headings } = useProductsWithoutEUD(fetcher);
   const { smDown } = useBreakpoints();
-
+  const [selectedItems, setSelectedItems] = useState([]);
   // Group variants by product to render the nested table structure
-  
+  const bulkActions = [
+    {
+      content: 'Export',
+      onAction: () => console.log("Export:", selectedItems),
+    },
+  ];
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState(allVariantRows);
@@ -144,13 +149,19 @@ export function ProductTableInput({ fetcher }) {
     
       <IndexTable
         condensed={smDown}
+        selectedItems={selectedItems}
         onSelectionChange={handleSelectionChange}
+        bulkActions={bulkActions}
         selectedItemsCount={
           allResourcesSelected ? "All" : selectedResources.length
         }
         resourceName={{ singular: "variant", plural: "variants" }}
         itemCount={allVariantRows.length}
         headings={headings}
+        pagination={{
+          hasNext: true,
+          onNext: () => {},
+        }}
       >
         {rowMarkup}
       </IndexTable>

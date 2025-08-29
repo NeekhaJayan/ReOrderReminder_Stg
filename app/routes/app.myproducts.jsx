@@ -141,7 +141,7 @@ export default function MyProducts() {
     }
   }, [fetcher?.data, setProducts]);
   const {productsWithEUD,spinner,bannerWithEUD,loadingWithEUD} = useProductsWithEUD(fetcher,queryValue);
-  const { banner, loading} = useProductsWithoutEUD(fetcher,queryValue);
+  const { banner, loading,formState, handleChange, handleSave, groupedProducts,allVariantRows, headings} = useProductsWithoutEUD(fetcher,queryValue);
 
   const [selected, setSelected] = useState(0);
   const { mode, setMode } = useSetIndexFiltersMode();
@@ -195,7 +195,6 @@ export default function MyProducts() {
           tabs={tabs || []}
           selected={selected}
           onSelect={setSelected}
-          filters={filters||[]}
           appliedFilters={[]}
           onClearAll={handleFiltersClearAll}
           mode={mode}
@@ -209,7 +208,7 @@ export default function MyProducts() {
 
             {loading && <div className="header-spinner">Saving...</div>}
             
-              <ProductTableInput fetcher={fetcher} />
+              <ProductTableInput fetcher={fetcher} formState={formState} handleChange={handleChange} handleSave={handleSave} groupedProducts={groupedProducts} allVariantRows={allVariantRows} headings={headings} />
             
             
           </>  
