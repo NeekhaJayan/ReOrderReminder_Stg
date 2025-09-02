@@ -2,7 +2,7 @@ import {IndexTable,Spinner,Text,LegacyCard} from "@shopify/polaris";
 import ProductTableRow from "./ProductTableRow";
 import SkeletonLoad from "../componets/SkeletonLoad";
 
-const ProductTable = ({productsWithEUD,fetcher,spinner}) => {
+const ProductTable = ({productsWithEUD,fetcher,spinner,pageInfo,onNextPage}) => {
      console.log(productsWithEUD)
     return(
             <IndexTable
@@ -31,9 +31,9 @@ const ProductTable = ({productsWithEUD,fetcher,spinner}) => {
                 ]}
                 selectable={false}
                 pagination={{
-                    hasNext: true,
-                    onNext: () => {},
-                    }}
+                hasNext: pageInfo?.hasNextPage,
+                onNext: onNextPage,
+              }}
                 >
                 {productsWithEUD.filter(productGroup => productGroup && productGroup.shopify_product_id)
                 .map((productGroup, index) => (

@@ -13,7 +13,7 @@ import { useEffect, useState, useCallback} from "react";
 import React, { Fragment, useMemo } from "react";
 // import { useProductsWithoutEUD } from "../hooks/useProductsWithoutEUD";
 
-export function ProductTableInput({ fetcher,formState, handleChange, handleSave, groupedProducts,allVariantRows, headings }) {
+export function ProductTableInput({ fetcher,formState, handleChange, handleSave, groupedProducts,allVariantRows, headings ,pageInfo,onNextPage}) {
   // const { formState, handleChange, handleSave, groupedProducts,allVariantRows, headings } = useProductsWithoutEUD(fetcher);
   const { smDown } = useBreakpoints();
   const [selectedItems, setSelectedItems] = useState([]);
@@ -160,9 +160,9 @@ export function ProductTableInput({ fetcher,formState, handleChange, handleSave,
         itemCount={allVariantRows.length}
         headings={headings}
         pagination={{
-          hasNext: true,
-          onNext: () => {},
-        }}
+                hasNext: pageInfo?.hasNextPage,
+                onNext: onNextPage,
+              }}
       >
         {rowMarkup}
       </IndexTable>
