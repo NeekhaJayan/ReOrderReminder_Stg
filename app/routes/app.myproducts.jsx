@@ -3,6 +3,7 @@ import { json } from "@remix-run/node";
 import {Page,Tabs,Card,IndexFilters, ChoiceList,
   useSetIndexFiltersMode,} from "@shopify/polaris";
 import { useFetcher} from "@remix-run/react";
+import { authenticate } from "../shopify.server";
 import { useEffect, useState, useCallback} from "react";
 import { shopInstance } from "../services/api/ShopService";
 import { productInstance } from "../services/api/ProductService";
@@ -13,10 +14,13 @@ import ProductTable  from "../componets/ProductTable";
 import { useProducts } from "../componets/ProductContext";
 import { useProductsWithEUD } from "../hooks/useProductsWithEUD";
 import { useProductsWithoutEUD } from "../hooks/useProductsWithoutEUD";
-import {updateProductVariantMetafield} from '../utils/shopify';
+import {updateProductVariantMetafield,getAllProducts} from '../utils/shopify';
 
 
-
+export const loader = async ({ request }) => {
+  const { admin } = await authenticate.admin(request);
+  return json({}); // products are already loaded in app.js
+};
 
 export const action = async ({ request }) => {
     const {admin } = await authenticate.admin(request);
@@ -110,6 +114,8 @@ export default function MyProducts() {
   const fetcher = useFetcher();
   const { setProducts } = useProducts(); 
   const [queryValue, setQueryValue] = useState('');
+  const [pageInfo, setPageInfo] = useState(products.pageInfo);
+  
   
   useEffect(() => {
     if (fetcher?.data?.result) {
@@ -178,6 +184,34 @@ export default function MyProducts() {
       },
     ];
   
+    const loadNextPage = async () => {
+      if (!pageInfo?.hasNextPage) return;
+
+      const res = await fetch(`/app/products?cursor=${pageInfo.endCursor}`);
+      const data = await res.json();
+
+      setProducts((prev) => ({
+        ...prev,
+        productsWithMetafield: [
+          ...prev.productsWithMetafield,
+          ...data.productsWithMetafield,
+        ],
+        productsWithoutMetafield: [
+          ...prev.productsWithoutMetafield,
+          ...data.productsWithoutMetafield,
+        ],
+        readyCount:
+          prev.readyCount + data.productsWithMetafield.length,
+        needsSetupCount:
+          prev.needsSetupCount + data.productsWithoutMetafield.length,
+        totalProducts:
+          prev.totalProducts +
+          data.productsWithMetafield.length +
+          data.productsWithoutMetafield.length,
+      }));
+
+      setPageInfo(data.pageInfo);
+  };
 
  
  return(
@@ -209,9 +243,15 @@ export default function MyProducts() {
 
             {loading && <div className="header-spinner">Saving...</div>}
             
-              <ProductTableInput fetcher={fetcher} formState={formState} handleChange={handleChange} handleSave={handleSave} groupedProducts={groupedProducts|| []} allVariantRows={allVariantRows|| []} headings={headings} />
-            
-            
+              <ProductTableInput fetcher={fetcher} 
+                            formState={formState} 
+                            handleChange={handleChange} 
+                            handleSave={handleSave} 
+                            groupedProducts={groupedProducts|| []} 
+                            allVariantRows={allVariantRows|| []} 
+                            headings={headings} 
+                            pageInfo={pageInfo}
+                            onNextPage={loadNextPage}/>  
           </>  
         ) : (
           <>
@@ -219,7 +259,11 @@ export default function MyProducts() {
             {bannerWithEUD?.error && <BannerComponent title={bannerWithEUD.error} tone="critical" />}
 
             {loadingWithEUD && <div className="header-spinner">Processing...</div>}
-            <ProductTable productsWithEUD={productsWithEUD} fetcher={fetcher} spinner={spinner}/>
+            <ProductTable productsWithEUD={productsWithEUD} 
+                          fetcher={fetcher} 
+                          spinner={spinner}
+                          pageInfo={pageInfo}
+                          onNextPage={loadNextPage}/>
           </>
           
         )}

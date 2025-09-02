@@ -193,75 +193,62 @@ export const deleteEUDMetafieldDefinition = async (admin, definitionId) => {
 //   };
 // };
 
-export const getAllProducts = async (admin) => {
+export const getAllProducts = async (admin, cursor = null) => {
   const productsWithMetafield = [];
   const productsWithoutMetafield = [];
 
-  let hasNextPage = true;
-  let cursor = null;
-
-  while (hasNextPage) {
-    const query = `
-      query getProducts($cursor: String) {
-        products(first: 250, after: $cursor) {
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-          edges {
-            node {
-              id
-              title
-              images(first: 1) {
-                edges {
-                  node {
-                    id
-                    originalSrc
-                    altText
-                  }
+  const response = await admin.graphql(`
+    query ($cursor: String) {
+      products(first: 50, after: $cursor) {
+        edges {
+          cursor
+          node {
+            id
+            title
+            images(first: 1) {
+              edges {
+                node {
+                  originalSrc
                 }
               }
-              variants(first: 50) {
-                edges {
-                  node {
-                    id
-                    displayName
-                    title
-                    metafield(namespace: "deca_EUD_stg", key: "EUD_STG") {
-                      id
-                      value
-                    }
+            }
+            variants(first: 50) {
+              edges {
+                node {
+                  id
+                  displayName
+                  title
+                  metafield(namespace: "deca_EUD_stg", key: "EUD_STG") {
+                    value
                   }
                 }
               }
             }
           }
         }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
-    `;
+    }`,
+    { variables: { cursor } }
+  );
+    const data = await response.json();
+    const edges = data?.data?.products?.edges || [];
+    const pageInfo = data?.data?.products?.pageInfo || { hasNextPage: false, endCursor: null };
 
-    const response = await admin.graphql(query, {
-      variables: { cursor }
-    });
-    const responseData = await response.json();
 
-    if (responseData.errors) {
-      console.error("GraphQL errors:", responseData.errors);
-      break;
-    }
 
-    const products = responseData?.data?.products;
-    const productNodes = products?.edges || [];
-
-    for (const productEdge of productNodes) {
-      const product = productEdge.node;
+    for (const edge of edges) {
+      const product = edge.node;
       const productImage = product.images.edges[0]?.node.originalSrc || null;
       const variants = product.variants.edges.map((v) => v.node);
 
       for (const variant of variants) {
         const hasValidMetafield =
           variant.metafield &&
-          variant.metafield.value !== null &&
+          variant.metafield.value &&
           variant.metafield.value.trim() !== "" &&
           variant.metafield.value.trim() !== "0";
 
@@ -283,11 +270,6 @@ export const getAllProducts = async (admin) => {
       }
     }
 
-    // Update pagination info
-    hasNextPage = products?.pageInfo?.hasNextPage;
-    cursor = products?.pageInfo?.endCursor;
-  }
-
   const readyCount = productsWithMetafield.length;
   const needsSetupCount = productsWithoutMetafield.length;
   const totalProducts = readyCount + needsSetupCount;
@@ -295,6 +277,7 @@ export const getAllProducts = async (admin) => {
   return {
     productsWithMetafield,
     productsWithoutMetafield,
+    pageInfo,
     totalProducts,
     readyCount,
     needsSetupCount,
