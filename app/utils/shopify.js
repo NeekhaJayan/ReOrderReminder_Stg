@@ -104,36 +104,133 @@ export const deleteEUDMetafieldDefinition = async (admin, definitionId) => {
 };
 
   
+// export const getAllProducts = async (admin) => {
+//   const productsWithMetafield = [];
+//   const productsWithoutMetafield = [];
+  
+//   const response = await admin.graphql(
+//     `#graphql
+//     query {
+//       products(first: 50) {
+//         edges {
+//           node {
+//             id
+//             title
+//             images(first: 50) {
+//             edges {
+//               node {
+//                 id
+//                 originalSrc
+//                 altText
+//                 }
+//               }
+//             }
+//             variants(first: 50) {
+//               edges {
+//                 node {
+//                   id
+//                   displayName
+//                   title
+//                   metafield(namespace: "deca_EUD_stg", key: "EUD_STG") {
+//                     id
+//                     value
+//                   }
+//                 }
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }`
+//   );
+
+//   const responseData = await response.json(); 
+//   if (responseData.errors) {
+//     console.error("GraphQL errors:", responseData.errors);
+//     return { productsWithMetafield, productsWithoutMetafield };
+//   }
+
+//   const productNodes = responseData?.data?.products?.edges || [];
+
+//   for (const productEdge of productNodes) {
+//     const product = productEdge.node;
+//     const productImage = product.images.edges[0]?.node.originalSrc || null;
+//     const variants = product.variants.edges.map((v) => v.node);
+
+//     for (const variant of variants) {
+//       const hasValidMetafield =
+//         variant.metafield &&
+//         variant.metafield.value !== null &&
+//         variant.metafield.value.trim() !== ''&&
+//       variant.metafield.value.trim() !== '0';
+
+//       const variantData = {
+//         shopify_product_id: product.id,
+//         productTitle: product.title,
+//         shopify_variant_id: variant.id,
+//         variantTitle: variant.title,
+//         displayName: variant.displayName,
+//         reorder_days: variant.metafield,
+//         productImage,
+//       };
+
+//     if (hasValidMetafield) {
+//         productsWithMetafield.push(variantData);
+//       } else {
+//         productsWithoutMetafield.push(variantData);
+//       }
+//    }
+//   }
+//   // console.log(productsWithMetafield);
+  
+//   const readyCount = productsWithMetafield.length;
+//   const needsSetupCount = productsWithoutMetafield.length;
+//   const totalProducts = readyCount + needsSetupCount;
+  
+//   return {
+//     productsWithMetafield,
+//     productsWithoutMetafield,totalProducts,readyCount,needsSetupCount
+//   };
+// };
+
 export const getAllProducts = async (admin) => {
   const productsWithMetafield = [];
   const productsWithoutMetafield = [];
-  
-  const response = await admin.graphql(
-    `#graphql
-    query {
-      products(first: 50) {
-        edges {
-          node {
-            id
-            title
-            images(first: 50) {
-            edges {
-              node {
-                id
-                originalSrc
-                altText
+
+  let hasNextPage = true;
+  let cursor = null;
+
+  while (hasNextPage) {
+    const query = `
+      query getProducts($cursor: String) {
+        products(first: 250, after: $cursor) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          edges {
+            node {
+              id
+              title
+              images(first: 1) {
+                edges {
+                  node {
+                    id
+                    originalSrc
+                    altText
+                  }
                 }
               }
-            }
-            variants(first: 50) {
-              edges {
-                node {
-                  id
-                  displayName
-                  title
-                  metafield(namespace: "deca_EUD_stg", key: "EUD_STG") {
+              variants(first: 50) {
+                edges {
+                  node {
                     id
-                    value
+                    displayName
+                    title
+                    metafield(namespace: "deca_EUD_stg", key: "EUD_STG") {
+                      id
+                      value
+                    }
                   }
                 }
               }
@@ -141,55 +238,66 @@ export const getAllProducts = async (admin) => {
           }
         }
       }
-    }`
-  );
+    `;
 
-  const responseData = await response.json(); 
-  if (responseData.errors) {
-    console.error("GraphQL errors:", responseData.errors);
-    return { productsWithMetafield, productsWithoutMetafield };
-  }
+    const response = await admin.graphql(query, {
+      variables: { cursor }
+    });
+    const responseData = await response.json();
 
-  const productNodes = responseData?.data?.products?.edges || [];
+    if (responseData.errors) {
+      console.error("GraphQL errors:", responseData.errors);
+      break;
+    }
 
-  for (const productEdge of productNodes) {
-    const product = productEdge.node;
-    const productImage = product.images.edges[0]?.node.originalSrc || null;
-    const variants = product.variants.edges.map((v) => v.node);
+    const products = responseData?.data?.products;
+    const productNodes = products?.edges || [];
 
-    for (const variant of variants) {
-      const hasValidMetafield =
-        variant.metafield &&
-        variant.metafield.value !== null &&
-        variant.metafield.value.trim() !== ''&&
-      variant.metafield.value.trim() !== '0';
+    for (const productEdge of productNodes) {
+      const product = productEdge.node;
+      const productImage = product.images.edges[0]?.node.originalSrc || null;
+      const variants = product.variants.edges.map((v) => v.node);
 
-      const variantData = {
-        shopify_product_id: product.id,
-        productTitle: product.title,
-        shopify_variant_id: variant.id,
-        variantTitle: variant.title,
-        displayName: variant.displayName,
-        reorder_days: variant.metafield,
-        productImage,
-      };
+      for (const variant of variants) {
+        const hasValidMetafield =
+          variant.metafield &&
+          variant.metafield.value !== null &&
+          variant.metafield.value.trim() !== "" &&
+          variant.metafield.value.trim() !== "0";
 
-    if (hasValidMetafield) {
-        productsWithMetafield.push(variantData);
-      } else {
-        productsWithoutMetafield.push(variantData);
+        const variantData = {
+          shopify_product_id: product.id,
+          productTitle: product.title,
+          shopify_variant_id: variant.id,
+          variantTitle: variant.title,
+          displayName: variant.displayName,
+          reorder_days: variant.metafield,
+          productImage,
+        };
+
+        if (hasValidMetafield) {
+          productsWithMetafield.push(variantData);
+        } else {
+          productsWithoutMetafield.push(variantData);
+        }
       }
-   }
+    }
+
+    // Update pagination info
+    hasNextPage = products?.pageInfo?.hasNextPage;
+    cursor = products?.pageInfo?.endCursor;
   }
-  // console.log(productsWithMetafield);
-  
+
   const readyCount = productsWithMetafield.length;
   const needsSetupCount = productsWithoutMetafield.length;
   const totalProducts = readyCount + needsSetupCount;
-  
+
   return {
     productsWithMetafield,
-    productsWithoutMetafield,totalProducts,readyCount,needsSetupCount
+    productsWithoutMetafield,
+    totalProducts,
+    readyCount,
+    needsSetupCount,
   };
 };
 

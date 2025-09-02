@@ -30,6 +30,10 @@ const ProductTable = ({productsWithEUD,fetcher,spinner}) => {
                     {title: "Analytics"},
                 ]}
                 selectable={false}
+                pagination={{
+                    hasNext: true,
+                    onNext: () => {},
+                    }}
                 >
                 {productsWithEUD.filter(productGroup => productGroup && productGroup.shopify_product_id)
                 .map((productGroup, index) => (

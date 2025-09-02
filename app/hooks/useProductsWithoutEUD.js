@@ -29,16 +29,15 @@ export function useProductsWithoutEUD(fetcher,queryValue) {
 
         return items.filter((item) => {
       const q = queryValue.toLowerCase();
-      const productMatch = item.productTitle?.toLowerCase().includes(q);
-      
-      return productMatch ;
+      const title = item.productTitle?.toLowerCase() || "";
+      return title.startsWith(q);
     });
     }, [queryValue]);
 
     const groupedProducts = useMemo(() => {
       const grouped = groupVariantsByProduct(products.productsWithoutMetafield || []);
-      return grouped;
-    }, [products.productsWithoutMetafield]);
+      return getFilteredItems(grouped);
+    }, [products.productsWithoutMetafield,getFilteredItems]);
     
     const allVariantRows = useMemo(() => {
       const allVariants = groupedProducts.flatMap((product) =>
@@ -50,8 +49,8 @@ export function useProductsWithoutEUD(fetcher,queryValue) {
           id: variant.shopify_variant_id,
         }))
       );
-      return getFilteredItems(allVariants);
-  }, [groupedProducts,getFilteredItems]);
+      return allVariants;
+  }, [groupedProducts]);
     console.log(allVariantRows);
  useEffect(() => {
     if (fetcher?.data?.success || fetcher?.data?.error) {
